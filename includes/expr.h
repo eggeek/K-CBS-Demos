@@ -19,8 +19,10 @@ struct Obs {
 };
 
 struct Env {
-  double maxx, maxy, // workspace
-      xL, yL;        // robot size
+  // workspace
+  double minx, maxx, miny, maxy;
+  // robot size
+  double xL, yL;
 };
 
 struct Scen {
@@ -54,5 +56,9 @@ struct Scen {
       fin >> name >> x >> y;
       goals[name] = {x, y};
     }
+  }
+
+  void save(std::string fname) {
+    std::ofstream fout;
   }
 };

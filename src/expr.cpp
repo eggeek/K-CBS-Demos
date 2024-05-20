@@ -71,7 +71,7 @@ void plan(const std::string &plannerName, const std::string &caseName,
   for (auto itr = starts.begin(); itr != starts.end(); itr++) {
     // construct the state space we are planning in
     // auto space = createBounded2ndOrderCarStateSpace(env.maxx, env.maxy);
-    auto space = createFirstOrderStateSpace(env.maxx, env.maxy);
+    auto space = createFirstOrderStateSpace(env.minx, env.maxx, env.miny, env.maxy);
 
     // name the state space parameter
     space->setName(itr->first);
@@ -182,8 +182,8 @@ void saveEnvFile(const std::string &caseName, int nBots, const Env &env,
    */
   using namespace std;
   ofstream out(caseName + "-env.txt");
-  out << 0 << " " << env.maxx << endl;
-  out << 0 << " " << env.maxy << endl;
+  out << env.minx << " " << env.maxx << endl;
+  out << env.miny << " " << env.maxy << endl;
   out << nBots << endl;
   for (int i = 0; i < nBots; i++) {
     out << env.xL << " " << env.yL << endl;
@@ -197,8 +197,8 @@ void saveEnvFile(const std::string &caseName, int nBots, const Env &env,
 void run() {
   std::vector<Obs> rects = {// {0.5 + 5, 1.8 + 5, 9.0 + 5, 1.0 + 5},
                             // {4.0 + 5, 5.0 + 5, 2.0 + 5, 2.0 + 5}
-                            {0.5 + 5.5, 1.8 + 5.0, 9.0, 1.0},
-                            {4.0 + 5.5, 5.0 + 5.0, 2.0, 2.0}};
+                            {0.5, 1.8, 9.0, 1.0},
+                            {4.0, 5.0, 2.0, 2.0}};
   oset obsts;
   for (const auto &r : rects) {
     obsts.insert(new RectangularObstacle(r.xleft, r.yleft, r.xL, r.yL));
@@ -206,19 +206,19 @@ void run() {
   // new RectangularObstacle(0.5, 1.8, 9.0, 1.0),
   // new RectangularObstacle(4.0, 5.0, 2.0, 2.0),
   const vmap starts{
-      {"Robot 1", {1.0 + 5.0, 0.5 + 5.0}},
-      {"Robot 2", {1.0 + 5.0, 3.5 + 5.0}},
-      {"Robot 3", {9.0 + 5.0, 0.5 + 5.0}},
-      {"Robot 4", {9.0 + 5.0, 3.5 + 5.0}},
+      {"Robot 1", {1.0, 0.5}},
+      {"Robot 2", {1.0, 3.5}},
+      {"Robot 3", {9.0, 0.5}},
+      {"Robot 4", {9.0, 3.5}},
 
   };
   const vmap goals{
-      {"Robot 1", {9.0 + 5.0, 0.5 + 5.0}},
-      {"Robot 2", {9.0 + 5.0, 9.0 + 5.0}},
-      {"Robot 3", {1.0 + 5.0, 0.5 + 5.0}},
-      {"Robot 4", {1.0 + 5.0, 9.0 + 5.0}},
+      {"Robot 1", {9.0, 0.5}},
+      {"Robot 2", {9.0, 9.0}},
+      {"Robot 3", {1.0, 0.5}},
+      {"Robot 4", {1.0, 9.0}},
   };
-  Env env{20, 20, 1, 1};
+  Env env{-5, 10, -5, 10, 1, 1};
 
   saveEnvFile("n4-10x10-rect2", starts.size(), env, rects);
 
