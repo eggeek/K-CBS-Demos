@@ -104,7 +104,11 @@ void plan(const std::string &plannerName, const std::string &caseName,
                                                           obsts));
 
     // set the state propagation routine
-    si->setStatePropagator(myDemoPropagateFunction);
+
+    // si->setStatePropagator(myDemoPropagateFunction);
+    auto odeSolver(
+        std::make_shared<oc::ODEBasicSolver<>>(si, &FirstOrderCarODE));
+    si->setStatePropagator(oc::ODESolver::getStatePropagator(odeSolver));
     // auto odeSolver(
     //     std::make_shared<oc::ODEBasicSolver<>>(si, &SecondOrderCarODE));
     // si->setStatePropagator(oc::ODESolver::getStatePropagator(
@@ -148,9 +152,9 @@ void plan(const std::string &plannerName, const std::string &caseName,
   omrb::PlannerPtr planner = nullptr;
   if (plannerName == "K-CBS") {
     // set the system merger
-    auto merger = std::make_shared<homogeneous2ndOrderCarSystemMerger>(
-        ma_si, ma_pdef, robot_map, obsts, 10, starts, goals);
-    // auto merger = std::make_shared<myDemoSystemMerger>(ma_si, ma_pdef);
+    // auto merger = std::make_shared<homogeneous2ndOrderCarSystemMerger>(
+    //     ma_si, ma_pdef, robot_map, obsts, 10, starts, goals);
+    auto merger = std::make_shared<myDemoSystemMerger>(ma_si, ma_pdef);
     ma_si->setSystemMerger(merger);
     // plan using Kinodynamic Conflict Based Search
     planner = std::make_shared<omrc::KCBS>(ma_si);
