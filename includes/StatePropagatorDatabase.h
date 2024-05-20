@@ -34,14 +34,16 @@
 
 /* Author: Justin Kottinger */
 
+#pragma once
 #include <ompl/control/ODESolver.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SO2StateSpace.h>
 #include <ompl/control/spaces/RealVectorControlSpace.h>
 
 namespace ob = ompl::base;
 namespace oc = ompl::control;
 
-void SecondOrderCarODE (const oc::ODESolver::StateType& q, const oc::Control* control, oc::ODESolver::StateType& qdot)
+inline void SecondOrderCarODE (const oc::ODESolver::StateType& q, const oc::Control* control, oc::ODESolver::StateType& qdot)
 {
     // q = x, y, v, phi, theta
     // c = a, phidot
@@ -63,8 +65,23 @@ void SecondOrderCarODE (const oc::ODESolver::StateType& q, const oc::Control* co
     qdot[4] = (v / carLength) * tan(phi);
 }
 
+inline void FirstOrderCarODE (const oc::ODESolver::StateType& q, const oc::Control* control, oc::ODESolver::StateType& qdot)
+{
+    // q = x, y, v, phi, theta
+    // c = v, phi
+    const double *u = control->as<oc::RealVectorControlSpace::ControlType>()->values;
+    // state params
+    const double v = q[2];
+    // Zero out qdot
+    qdot.resize (q.size (), 0);
+    qdot[0] = v * cos(u[1]);
+    qdot[1] = v * sin(u[1]);
+    qdot[2] = u[0];
+    qdot[3] = u[1];
+}
+
 // callback for putting angle [0, 2pi]
-void SecondOrderCarODEPostIntegration (const ob::State* /*state*/, const oc::Control* /*control*/, const double /*duration*/, ob::State *result)
+inline void SecondOrderCarODEPostIntegration (const ob::State* /*state*/, const oc::Control* /*control*/, const double /*duration*/, ob::State *result)
 {
     // wrap the angle
     ob::CompoundState* cs = result->as<ob::CompoundState>();
@@ -74,7 +91,7 @@ void SecondOrderCarODEPostIntegration (const ob::State* /*state*/, const oc::Con
 }
 
 // Not used directly -- see TwoSecondOrderCarStatePropagator class
-void TwoSecondOrderCarsODE (const oc::ODESolver::StateType& q, const oc::Control* control, oc::ODESolver::StateType& qdot)
+inline void TwoSecondOrderCarsODE (const oc::ODESolver::StateType& q, const oc::Control* control, oc::ODESolver::StateType& qdot)
 {
     // q = x1, y1, v1, phi1, theta1, x2, y2, v2, phi2, theta2 
     // c = a1, phidot1, a2, phidot2
@@ -103,7 +120,7 @@ void TwoSecondOrderCarsODE (const oc::ODESolver::StateType& q, const oc::Control
 
 // Not used directly -- see TwoSecondOrderCarStatePropagator class
 // callback for putting angle [0, 2pi]
-void TwoSecondOrderCarODEPostIntegration (const ob::State* /*state*/, const oc::Control* /*control*/, const double /*duration*/, ob::State *result)
+inline void TwoSecondOrderCarODEPostIntegration (const ob::State* /*state*/, const oc::Control* /*control*/, const double /*duration*/, ob::State *result)
 {
     ob::CompoundState* cs = result->as<ob::CompoundState>();
     // iterate over two robots and wrap their angles seperately
