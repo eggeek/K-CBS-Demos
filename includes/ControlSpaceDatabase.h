@@ -33,6 +33,7 @@
 *********************************************************************/
 
 /* Author: Justin Kottinger */
+#pragma once
 
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/control/spaces/RealVectorControlSpace.h>
@@ -40,20 +41,24 @@
 namespace ob = ompl::base;
 namespace oc = ompl::control;
 
-oc::ControlSpacePtr createUniform2DRealVectorControlSpace(ob::StateSpacePtr &space)
+inline oc::ControlSpacePtr createUniform2DRealVectorControlSpace(ob::StateSpacePtr &space)
 {
     auto cspace(std::make_shared<oc::RealVectorControlSpace>(space, 2));
     
     // set the bounds for the control space
     ob::RealVectorBounds cbounds(2);
-    cbounds.setLow(-1);
-    cbounds.setHigh(1);
+    // velocity
+    cbounds.setLow(0, -1);
+    cbounds.setHigh(0, 1);
+    // phi
+    cbounds.setLow(1, -M_PI);
+    cbounds.setHigh(1, M_PI);
     cspace->setBounds(cbounds);
 
     return cspace;
 }
 
-oc::ControlSpacePtr createUniform4DRealVectorControlSpace(ob::StateSpacePtr &space)
+inline oc::ControlSpacePtr createUniform4DRealVectorControlSpace(ob::StateSpacePtr &space)
 {
     auto cspace(std::make_shared<oc::RealVectorControlSpace>(space, 4));
     
