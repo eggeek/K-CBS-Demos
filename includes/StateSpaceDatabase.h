@@ -33,13 +33,14 @@
 *********************************************************************/
 
 /* Author: Justin Kottinger */
+#pragma once
 
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SO2StateSpace.h>
 
 namespace ob = ompl::base;
 
-ob::StateSpacePtr createBounded2ndOrderCarStateSpace(const unsigned int x_max, const unsigned int y_max)
+inline ob::StateSpacePtr createBounded2ndOrderCarStateSpace(const unsigned int x_max, const unsigned int y_max)
 {
     ob::StateSpacePtr space = std::make_shared<ob::CompoundStateSpace>();
     space->as<ob::CompoundStateSpace>()->addSubspace(ob::StateSpacePtr(new ob::RealVectorStateSpace(4)), 1.0);
@@ -54,14 +55,14 @@ ob::StateSpacePtr createBounded2ndOrderCarStateSpace(const unsigned int x_max, c
     bounds.setHigh(1, y_max); // y upper bound
     bounds.setLow(2, -1);  // v lower bound
     bounds.setHigh(2, 1); // v upper bound
-    bounds.setLow(3, -M_PI / 3);  // phi lower bound
-    bounds.setHigh(3, M_PI / 3); // phi upper bound
+    bounds.setLow(3, -M_PI);  // phi lower bound
+    bounds.setHigh(3, M_PI); // phi upper bound
     space->as<ob::CompoundStateSpace>()->as<ob::RealVectorStateSpace>(0)->setBounds(bounds);
 
     return space;
 }
 
-ob::StateSpacePtr createBoundedTwo2ndOrderCarStateSpace(const unsigned int x_max, const unsigned int y_max)
+inline ob::StateSpacePtr createBoundedTwo2ndOrderCarStateSpace(const unsigned int x_max, const unsigned int y_max)
 {
     ob::StateSpacePtr space = std::make_shared<ob::CompoundStateSpace>();
     // robot 1
@@ -81,8 +82,8 @@ ob::StateSpacePtr createBoundedTwo2ndOrderCarStateSpace(const unsigned int x_max
     bounds.setHigh(1, y_max); // y upper bound
     bounds.setLow(2, -1);  // v lower bound
     bounds.setHigh(2, 1); // v upper bound
-    bounds.setLow(3, -M_PI / 3);  // phi lower bound
-    bounds.setHigh(3, M_PI / 3); // phi upper bound
+    bounds.setLow(3, -M_PI);  // phi lower bound
+    bounds.setHigh(3, M_PI); // phi upper bound
     space->as<ob::CompoundStateSpace>()->as<ob::RealVectorStateSpace>(0)->setBounds(bounds);
     space->as<ob::CompoundStateSpace>()->as<ob::RealVectorStateSpace>(2)->setBounds(bounds);
     
