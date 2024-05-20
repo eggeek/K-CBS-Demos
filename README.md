@@ -7,7 +7,7 @@
 5. Run experiments
  - `./bin/expr`: original experiment script
  - `./bin/simple_expr`: simplified experiment script that ignores feasibility checking in transition
-
+6. Plot result: `python pathplot.py`
 
 ## References
 1. J. Kottinger, S. Almagor and M. Lahijanian, "Conflict-Based Search for Multi-Robot Motion Planning with Kinodynamic Constraints," 2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), Kyoto, Japan, 2022, pp. 13494-13499, doi: 10.1109/IROS47612.2022.9982018.
