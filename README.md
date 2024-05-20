@@ -9,6 +9,38 @@
  - `./bin/simple_expr`: simplified experiment script that ignores feasibility checking in transition
 6. Plot result: `python pathplot.py`
 
+- Turn on/off high order dynamics:
+
+```cpp
+
+// set the state propagation routine
+
+// without high order dynamics
+// si->setStatePropagator(myDemoPropagateFunction);
+
+// using ODE solver for high order dynamics
+auto odeSolver(
+    std::make_shared<oc::ODEBasicSolver<>>(si, &SecondOrderCarODE));
+si->setStatePropagator(oc::ODESolver::getStatePropagator(
+    odeSolver, &SecondOrderCarODEPostIntegration));
+```
+
+- Turn on/off `systemmerger`: author's original `systemmerger` causes a dangerous warning, you may want to turn-off it.
+
+```cpp
+
+// set the system merger
+
+// proposed system merger in author's experiments
+// auto merger = std::make_shared<homogeneous2ndOrderCarSystemMerger>(
+//     ma_si, ma_pdef, robot_map, obsts, 10, starts, goals);
+
+// empty system merger
+auto merger = std::make_shared<myDemoSystemMerger>(ma_si, ma_pdef);
+ma_si->setSystemMerger(merger);
+
+```
+
 ## References
 1. J. Kottinger, S. Almagor and M. Lahijanian, "Conflict-Based Search for Multi-Robot Motion Planning with Kinodynamic Constraints," 2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), Kyoto, Japan, 2022, pp. 13494-13499, doi: 10.1109/IROS47612.2022.9982018.
 2. Theurkauf, Anne, Kottinger, Justin, and Lahijanian, Morteza. "Chance-Constrained Multi-Robot Motion Planning under Gaussian Uncertainties." arXiv preprint arXiv:2303.11476 (2023).
