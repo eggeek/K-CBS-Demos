@@ -68,16 +68,12 @@ inline void SecondOrderCarODE (const oc::ODESolver::StateType& q, const oc::Cont
 inline void FirstOrderCarODE (const oc::ODESolver::StateType& q, const oc::Control* control, oc::ODESolver::StateType& qdot)
 {
     // q = x, y, v, phi, theta
-    // c = v, phi
+    // c = vx, vy
     const double *u = control->as<oc::RealVectorControlSpace::ControlType>()->values;
-    // state params
-    const double v = q[2];
     // Zero out qdot
     qdot.resize (q.size (), 0);
-    qdot[0] = v * cos(u[1]);
-    qdot[1] = v * sin(u[1]);
-    qdot[2] = u[0];
-    qdot[3] = u[1];
+    qdot[0] = u[0];
+    qdot[1] = u[1];
 }
 
 // callback for putting angle [0, 2pi]

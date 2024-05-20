@@ -34,10 +34,13 @@
 
 /* Author: Justin Kottinger */
 
+#pragma once
 #include <ompl/control/SpaceInformation.h>
 #include <ompl/control/planners/rrt/RRT.h>
 
-ompl::base::PlannerPtr allocateControlRRT(const ompl::base::SpaceInformationPtr &si)
+namespace oc =ompl::control;
+
+inline ompl::base::PlannerPtr allocateControlRRT(const ompl::base::SpaceInformationPtr &si)
 {
     const oc::SpaceInformationPtr siC = std::static_pointer_cast<ompl::control::SpaceInformation>(si);
     ompl::base::PlannerPtr planner = std::make_shared<oc::RRT>(siC);

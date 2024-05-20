@@ -40,7 +40,6 @@
 #include <boost/geometry/algorithms/correct.hpp>
 #include <boost/geometry/strategies/transform/matrix_transformers.hpp>
 #include <stdio.h>
-#include <iostream>
 
 typedef boost::geometry::model::d2::point_xy<double> BoostPoint;
 typedef boost::geometry::model::polygon<BoostPoint, false, true> BoostPolygon;

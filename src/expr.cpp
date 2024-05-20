@@ -1,32 +1,22 @@
+#include "expr.h"
 #include "ControlSpaceDatabase.h"
 #include "GoalRegionDatabase.h"
-#include "Obstacle.h"
 #include "PlannerAllocatorDatabase.h"
 #include "Robot.h"
+#include "SimpleStateValidityChecker.h"
 #include "StatePropagatorDatabase.h"
 #include "StateSpaceDatabase.h"
-#include "StateValidityCheckerDatabase.h"
-#include "SystemMergerDatabase.h"
 
 #include <map>
 #include <math.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
 #include <ompl/multirobot/control/planners/kcbs/KCBS.h>
 #include <ompl/multirobot/control/planners/pp/PP.h>
-#include <set>
 
 namespace omrb = ompl::multirobot::base;
 namespace omrc = ompl::multirobot::control;
 namespace ob = ompl::base;
 namespace oc = ompl::control;
-
-using vmap = std::map<std::string, std::pair<double, double>>;
-using oset = std::set<Obstacle *>;
-
-struct Env {
-  double maxx, maxy, // workspace
-      xL, yL;        // robot size
-};
 
 class myDemoSystemMerger : public omrc::SystemMerger {
 public:
@@ -63,13 +53,6 @@ void myDemoPropagateFunction(const ob::State *start, const oc::Control *control,
   result->as<ob::SE2StateSpace::StateType>()->setYaw(ctrl[1]);
 }
 
-struct Obs {
-  double xleft, yleft, xL, yL;
-  void print(std::ostream &out) {
-    out << xleft << " " << yleft << " " << xL << " " << yL << std::endl;
-  }
-};
-
 void plan(const std::string &plannerName, const std::string &caseName,
           const vmap &starts, const vmap &goals, oset &obsts, const Env &env) {
 
@@ -87,21 +70,24 @@ void plan(const std::string &plannerName, const std::string &caseName,
   // construct four individuals that operate in SE3
   for (auto itr = starts.begin(); itr != starts.end(); itr++) {
     // construct the state space we are planning in
-    auto space = createBounded2ndOrderCarStateSpace(env.maxx, env.maxy);
+    // auto space = createBounded2ndOrderCarStateSpace(env.maxx, env.maxy);
+    auto space = createFirstOrderStateSpace(env.maxx, env.maxy);
 
     // name the state space parameter
     space->setName(itr->first);
 
     // create a control space
-    auto cspace = createUniform2DRealVectorControlSpace(space);
+    // auto cspace = createUniform2DRealVectorControlSpace(space);
+    auto cspace = createFirstOrderControlSpace(space);
 
     // construct an instance of  space information from this control space
     auto si(std::make_shared<oc::SpaceInformation>(space, cspace));
 
     // // set state validity checking for this space
+    // si->setStateValidityChecker(
+    // std::make_shared<homogeneous2ndOrderCarSystemSVC>(si, robot_map, obsts));
     si->setStateValidityChecker(
-        std::make_shared<homogeneous2ndOrderCarSystemSVC>(si, robot_map,
-                                                          obsts));
+        std::make_shared<SimpleValidityChecker>(si, robot_map, obsts));
 
     // set the state propagation routine
 
@@ -211,8 +197,8 @@ void saveEnvFile(const std::string &caseName, int nBots, const Env &env,
 void run() {
   std::vector<Obs> rects = {// {0.5 + 5, 1.8 + 5, 9.0 + 5, 1.0 + 5},
                             // {4.0 + 5, 5.0 + 5, 2.0 + 5, 2.0 + 5}
-                            {0.5, 1.8, 9.0, 1.0},
-                            {4.0, 5.0, 2.0, 2.0}};
+                            {0.5 + 5.5, 1.8 + 5.0, 9.0, 1.0},
+                            {4.0 + 5.5, 5.0 + 5.0, 2.0, 2.0}};
   oset obsts;
   for (const auto &r : rects) {
     obsts.insert(new RectangularObstacle(r.xleft, r.yleft, r.xL, r.yL));
@@ -220,19 +206,19 @@ void run() {
   // new RectangularObstacle(0.5, 1.8, 9.0, 1.0),
   // new RectangularObstacle(4.0, 5.0, 2.0, 2.0),
   const vmap starts{
-      {"Robot 1", {1.0, 0.5}},
-      {"Robot 2", {1.0, 3.5}},
-      {"Robot 3", {9.0, 0.5}},
-      {"Robot 4", {9.0, 3.5}},
+      {"Robot 1", {1.0 + 5.0, 0.5 + 5.0}},
+      {"Robot 2", {1.0 + 5.0, 3.5 + 5.0}},
+      {"Robot 3", {9.0 + 5.0, 0.5 + 5.0}},
+      {"Robot 4", {9.0 + 5.0, 3.5 + 5.0}},
 
   };
   const vmap goals{
-      {"Robot 1", {9.0, 0.5}},
-      {"Robot 2", {9.0, 9.0}},
-      {"Robot 3", {1.0, 0.5}},
-      {"Robot 4", {1.0, 9.0}},
+      {"Robot 1", {9.0 + 5.0, 0.5 + 5.0}},
+      {"Robot 2", {9.0 + 5.0, 9.0 + 5.0}},
+      {"Robot 3", {1.0 + 5.0, 0.5 + 5.0}},
+      {"Robot 4", {1.0 + 5.0, 9.0 + 5.0}},
   };
-  Env env{10, 10, 0.5, 0.5};
+  Env env{20, 20, 1, 1};
 
   saveEnvFile("n4-10x10-rect2", starts.size(), env, rects);
 

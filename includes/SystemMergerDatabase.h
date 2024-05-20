@@ -33,13 +33,18 @@
 *********************************************************************/
 
 /* Author: Justin Kottinger */
-
+#pragma once
 #include "Robot.h"
 #include "Obstacle.h"
+#include "StateSpaceDatabase.h"
+#include "ControlSpaceDatabase.h"
+#include "PlannerAllocatorDatabase.h"
+#include "StatePropagatorDatabase.h"
+#include "StateValidityCheckerDatabase.h"
+#include "GoalRegionDatabase.h"
 #include <ompl/multirobot/control/SpaceInformation.h>
 #include <unordered_map>
 
-namespace omr = ompl::multirobot;
 namespace omrb = ompl::multirobot::base;
 namespace omrc = ompl::multirobot::control;
 

@@ -34,6 +34,7 @@
 
 /* Author: Justin Kottinger */
 
+#pragma once
 #include <ompl/base/goals/GoalRegion.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 

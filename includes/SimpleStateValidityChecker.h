@@ -1,40 +1,4 @@
-/*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2010, Rice University
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Rice University nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
 
-/* Author: Justin Kottinger */
-
-#pragma once
 #include "Robot.h"
 #include "Obstacle.h"
 #include <ompl/control/SpaceInformation.h>
@@ -44,10 +8,10 @@
 
 namespace ob = ompl::base;
 
-class homogeneous2ndOrderCarSystemSVC: public ob::StateValidityChecker
+class SimpleValidityChecker: public ob::StateValidityChecker
 {
 public:
-    homogeneous2ndOrderCarSystemSVC(const ob::SpaceInformationPtr &si, std::unordered_map<std::string, Robot*> robots, std::set<Obstacle*> obs_set = {}): 
+    SimpleValidityChecker(const ob::SpaceInformationPtr &si, std::unordered_map<std::string, Robot*> robots, std::set<Obstacle*> obs_set = {}): 
         robot1_name_(si->getStateSpace()->getName()), robot1_(robots.at(robot1_name_)), rad1_(robot1_->getBoundingRadius()), 
         robots_(robots), ob::StateValidityChecker(si), obstacles_(obs_set)
     {
@@ -68,9 +32,7 @@ public:
             const double other_rad = (*o_itr)->getBoundingRadius();
             if (!performQuickCollisionCheck(this_pos, other_pos, other_rad))
             {
-                // get the orientation of the robot
-                const double this_rot = state->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(1)->value;
-                if (!performExactCollisionCheck(this_pos, this_rot, other_pos, *o_itr))
+                if (!performExactCollisionCheck(this_pos, other_pos, *o_itr))
                     return false;
             }
         }
@@ -85,7 +47,6 @@ public:
         const std::string robot2_name = state2.first->getStateSpace()->getName();
         // get the pos and orientation of this robot
         const double* this_pos = state1->as<ob::CompoundStateSpace::StateType>()->as<ob::RealVectorStateSpace::StateType>(0)->values;
-        const double this_rot = state1->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(1)->value;
         
         if (robot2_name.find("and") != robot2_name.npos)
         {
@@ -96,13 +57,12 @@ public:
                 // get the bounding radius of idx robot
                 const double rad2 = other_robot->as<CompoundRobot>()->getRobot(idx)->getBoundingRadius();
                 const double* other_pos = state2.second->as<ob::CompoundStateSpace::StateType>()->as<ob::RealVectorStateSpace::StateType>(2 * idx)->values;
-                const double other_rot = state2.second->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(2 * idx + 1)->value;
 
                 // perform quick collision check
                 if (!performQuickCollisionCheck(this_pos, other_pos, rad2))
                 {
                     // collision possible, must check exact
-                    if (!performExactCollisionCheck(this_pos, this_rot, other_pos, other_rot, other_robot))
+                    if (!performExactCollisionCheck(this_pos, other_pos, other_robot))
                         return false;
                 }   
             }
@@ -114,13 +74,12 @@ public:
             Robot* other_robot = robots_.at(robot2_name);
             const double rad2 = other_robot->getBoundingRadius();
             const double* other_pos = state2.second->as<ob::CompoundStateSpace::StateType>()->as<ob::RealVectorStateSpace::StateType>(0)->values;
-            const double other_rot = state2.second->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(1)->value;
 
             // perform quick collision check
             if (!performQuickCollisionCheck(this_pos, other_pos, rad2))
             {
                 // collision possible, must check exact
-                if (!performExactCollisionCheck(this_pos, this_rot, other_pos, other_rot, other_robot))
+                if (!performExactCollisionCheck(this_pos, other_pos, other_robot))
                     return false;
             }
             return true;
@@ -144,7 +103,7 @@ private:
     }
 
     // returns true if no collision
-    bool performExactCollisionCheck(const double* this_pos, const double this_rot, const double* other_pos, const double other_rot, const Robot* other_robot) const
+    bool performExactCollisionCheck(const double* this_pos, const double* other_pos, const Robot* other_robot) const
     {
         BoostPolygon poly1 = robot1_->getShape();
         // use boost transform to create polygon at true robots location
@@ -153,9 +112,9 @@ private:
         boost::geometry::correct(tmp1);
         boost::geometry::assign(tmp1, poly1);
         boost::geometry::strategy::transform::matrix_transformer<double, 2, 2> xfrm1(
-                 cos(this_rot), sin(this_rot), this_pos[0],
-                -sin(this_rot), cos(this_rot), this_pos[1],
-                          0,          0,  1);
+                 1, 0, this_pos[0],
+                 0, 1, this_pos[1],
+                 0, 0, 1);
         boost::geometry::transform(tmp1, result1, xfrm1);
         boost::geometry::correct(result1);
 
@@ -166,9 +125,9 @@ private:
         boost::geometry::correct(tmp2);
         boost::geometry::assign(tmp2, poly2);
         boost::geometry::strategy::transform::matrix_transformer<double, 2, 2> xfrm2(
-                 cos(other_rot), sin(other_rot), other_pos[0],
-                -sin(other_rot), cos(other_rot), other_pos[1],
-                          0,          0,  1);
+                 1, 0, other_pos[0],
+                 0, 1, other_pos[1],
+                 0, 0, 1);
         boost::geometry::transform(tmp2, result2, xfrm2);
         boost::geometry::correct(result2);
 
@@ -180,7 +139,7 @@ private:
     }
 
     // returns true if no collision
-    bool performExactCollisionCheck(const double* this_pos, const double this_rot, const double* other_pos, const Obstacle* obstacle) const
+    bool performExactCollisionCheck(const double* this_pos, const double* other_pos, const Obstacle* obstacle) const
     {
         BoostPolygon poly1 = robot1_->getShape();
         // use boost transform to create polygon at true robots location
@@ -189,8 +148,8 @@ private:
         boost::geometry::correct(tmp1);
         boost::geometry::assign(tmp1, poly1);
         boost::geometry::strategy::transform::matrix_transformer<double, 2, 2> xfrm1(
-                 cos(this_rot), sin(this_rot), this_pos[0],
-                -sin(this_rot), cos(this_rot), this_pos[1],
+                 1, 0, this_pos[0],
+                 0, 1, this_pos[1],
                           0,          0,  1);
         boost::geometry::transform(tmp1, result1, xfrm1);
         boost::geometry::correct(result1);
@@ -214,10 +173,10 @@ private:
     std::set<Obstacle*> obstacles_;
 };
 
-class homogeneousTwo2ndOrderCarSystemSVC: public ob::StateValidityChecker
+class SimpleTwoValidityChecker: public ob::StateValidityChecker
 {
 public:
-    homogeneousTwo2ndOrderCarSystemSVC(const ob::SpaceInformationPtr &si, const Robot* robot1, const Robot* robot2,
+    SimpleTwoValidityChecker(const ob::SpaceInformationPtr &si, const Robot* robot1, const Robot* robot2,
         std::unordered_map<std::string, Robot*> robots, std::set<Obstacle*> obs_set = {}): 
         robot1_(robot1), rad1_(robot1_->getBoundingRadius()), robot2_(robot2), rad2_(robot2_->getBoundingRadius()), 
         robots_(robots), ob::StateValidityChecker(si), obstacles_(obs_set)
@@ -233,13 +192,11 @@ public:
 
         // check if the two robots collide with each other
         const double* this_pos = state->as<ob::CompoundStateSpace::StateType>()->as<ob::RealVectorStateSpace::StateType>(0)->values;
-        const double this_rot = state->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(1)->value;
         const double* other_pos = state->as<ob::CompoundStateSpace::StateType>()->as<ob::RealVectorStateSpace::StateType>(2)->values;
-        const double other_rot = state->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(3)->value;
         
         if (!performQuickCollisionCheck(this_pos, other_pos, rad2_))
         {
-            if (!performExactCollisionCheck(this_pos, this_rot, other_pos, other_rot, robot2_))
+            if (!performExactCollisionCheck(this_pos, other_pos, robot2_))
                 return false;
         }
 
@@ -253,9 +210,7 @@ public:
                 const double other_rad = (*o_itr)->getBoundingRadius();
                 if (!performQuickCollisionCheck(this_pos, other_pos, other_rad))
                 {
-                    // get the orientation of the robot
-                    const double this_rot = state->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(2 * idx + 1)->value;
-                    if (!performExactCollisionCheck(this_pos, this_rot, other_pos, *o_itr))
+                    if (!performExactCollisionCheck(this_pos, other_pos, *o_itr))
                         return false;
                 }
             }
@@ -278,11 +233,8 @@ public:
             const double* this_pos = state1->as<ob::CompoundStateSpace::StateType>()->as<ob::RealVectorStateSpace::StateType>(2 * idx)->values;
             if (!performQuickCollisionCheck(this_pos, other_pos, other_rad))
             {
-                // get the positions of the robots
-                const double this_rot = state1->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(2 * idx + 1)->value;
-                const double other_rot = state2.second->as<ob::CompoundStateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(1)->value;
                 // collision possible, must check exact
-                if (!performExactCollisionCheck(this_pos, this_rot, other_pos, other_rot, other_robot))
+                if (!performExactCollisionCheck(this_pos, other_pos, other_robot))
                     return false;
             }
         }
@@ -300,7 +252,7 @@ private:
     }
 
     // returns true if no collision
-    bool performExactCollisionCheck(const double* this_pos, const double this_rot, const double* other_pos, const double other_rot, const Robot* other_robot) const
+    bool performExactCollisionCheck(const double* this_pos, const double* other_pos, const Robot* other_robot) const
     {
         BoostPolygon poly1 = robot1_->getShape();
         // use boost transform to create polygon at true robots location
@@ -309,9 +261,9 @@ private:
         boost::geometry::correct(tmp1);
         boost::geometry::assign(tmp1, poly1);
         boost::geometry::strategy::transform::matrix_transformer<double, 2, 2> xfrm1(
-                 cos(this_rot), sin(this_rot), this_pos[0],
-                -sin(this_rot), cos(this_rot), this_pos[1],
-                          0,          0,  1);
+                1, 0, this_pos[0],
+                0, 1, this_pos[1],
+                0, 0, 1);
         boost::geometry::transform(tmp1, result1, xfrm1);
         boost::geometry::correct(result1);
 
@@ -322,9 +274,9 @@ private:
         boost::geometry::correct(tmp2);
         boost::geometry::assign(tmp2, poly2);
         boost::geometry::strategy::transform::matrix_transformer<double, 2, 2> xfrm2(
-                 cos(other_rot), sin(other_rot), other_pos[0],
-                -sin(other_rot), cos(other_rot), other_pos[1],
-                          0,          0,  1);
+                1, 0, other_pos[0],
+                0, 1, other_pos[1],
+                0, 0, 1);
         boost::geometry::transform(tmp2, result2, xfrm2);
         boost::geometry::correct(result2);
 
@@ -336,7 +288,7 @@ private:
     }
 
     // returns true if no collision
-    bool performExactCollisionCheck(const double* this_pos, const double this_rot, const double* other_pos, const Obstacle* obstacle) const
+    bool performExactCollisionCheck(const double* this_pos, const double* other_pos, const Obstacle* obstacle) const
     {
         BoostPolygon poly1 = robot1_->getShape();
         // use boost transform to create polygon at true robots location
@@ -345,9 +297,9 @@ private:
         boost::geometry::correct(tmp1);
         boost::geometry::assign(tmp1, poly1);
         boost::geometry::strategy::transform::matrix_transformer<double, 2, 2> xfrm1(
-                 cos(this_rot), sin(this_rot), this_pos[0],
-                -sin(this_rot), cos(this_rot), this_pos[1],
-                          0,          0,  1);
+                 1, 0, this_pos[0],
+                 0, 1, this_pos[1],
+                 0, 0, 1);
         boost::geometry::transform(tmp1, result1, xfrm1);
         boost::geometry::correct(result1);
 
