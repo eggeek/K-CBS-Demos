@@ -1,19 +1,13 @@
 # K-CBS-Demos
-Demonstrations of our Kinodynamic Conflict-Based Search (K-CBS) algorithm that are too involved to be included in OMPL. Please see the [References](#references) for detailed explanations of the algorithm. The implementation has been built into [The Open Motion Planning Library](https://ompl.kavrakilab.org/index.html) but the pull request has not yet been finalized. In the meantime, the library with the K-CBS implementation can be installed at [this repository](https://github.com/aria-systems-group/Kinodynamic-Conflict-Based-Search).
 
-## Set-Up
-To run these demos, one must first install [this OMPL repository](https://github.com/aria-systems-group/Kinodynamic-Conflict-Based-Search). After that, one can build this project via the following commands.
-```
-cd K-CBS-Demos
-mkdir build/
-cd build/
-cmake ..
-make
-```
-This will build many executables that can be run individually. For example, to see how quickly K-CBS can solve an MRMP problem instance with 10 2nd order cars in an empty 32x32 workspace, one can enter the following command:
-```
-./demo_Empty32x32_10robots_dyn2ndOrderCars 
-```
+1. `git clone --recurcive git@github.com:eggeek/K-CBS-Demos.git`;
+2. `cd K-CBS-Demos/ompl`;
+3. Follow the instruction in `K-CBS-Demos/ompl/Readme.md` to compile `ompl`;
+4. Back to the top layer and run `make fast` to compile `K-CBS-Demos`;
+5. Run experiments
+ - `./bin/expr`: original experiment script
+ - `./bin/simple_expr`: simplified experiment script that ignores feasibility checking in transition
+
 
 ## References
 1. J. Kottinger, S. Almagor and M. Lahijanian, "Conflict-Based Search for Multi-Robot Motion Planning with Kinodynamic Constraints," 2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), Kyoto, Japan, 2022, pp. 13494-13499, doi: 10.1109/IROS47612.2022.9982018.
