@@ -1,0 +1,3 @@
+[submodule "ompl"]
+	path = ompl
+	url = git@github.com:aria-systems-group/Multi-Robot-OMPL.git
