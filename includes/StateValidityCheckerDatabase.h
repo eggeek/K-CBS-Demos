@@ -37,6 +37,8 @@
 #include "Robot.h"
 #include "Obstacle.h"
 #include <ompl/control/SpaceInformation.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/spaces/SO2StateSpace.h>
 #include <set>
 
 namespace ob = ompl::base;
