@@ -16,6 +16,26 @@ Poly: TypeAlias = list[Vert]
 VertPath: TypeAlias = tuple[list[Vert], TimeSteps]
 
 
+class Agent:
+    name: str = ""
+    xL: float = 0
+    yL: float = 0
+    sx: float = 0
+    sy: float = 0
+    gx: float = 0
+    gy: float = 0
+
+    def __init__(
+        self, n: str, xl: float, yl: float, sx: float, sy: float, gx: float, gy: float
+    ):
+        self.name = n
+        self.xL = xl 
+        self.yL = yl
+        self.sx = sx
+        self.sy = sy
+        self.gx = gx
+        self.gy = gy
+
 class Env:
     def __init__(
         self,
@@ -25,7 +45,7 @@ class Env:
         maxy: float = 0,
         maxt: float = 0,
         obsts: list[Poly] | None = None,
-        robots: dict[int, Vert] | None = None,
+        robots: dict[int, Agent] | None = None,
     ):
         self.minx: float = minx
         self.maxx: float = maxx
@@ -144,9 +164,9 @@ def plot_path(
     for rid in agent_paths.keys():
         color = colors[rid]
         v = agent_paths[rid][0]
-        xL, yL = env.robots[rid]
+        xL, yL = env.robots[rid].xL, env.robots[rid].yL
         rects[rid] = Rectangle(
-            (v[0]-xL/2, v[1]-yL/2), xL, yL, color=color, alpha=0.3, linewidth=3
+            (v[0] - xL / 2, v[1] - yL / 2), xL, yL, color=color, alpha=0.3, linewidth=3
         )
         circles[rid] = Circle(v, radius=(xL + yL) / 20, alpha=0.7, color=color)
         ax.add_patch(rects[rid])
@@ -170,8 +190,8 @@ def plot_path(
             else:
                 x, y = path[ts]
             labels[rid].set_position((x, y + 0.1))
-            xL, yL = env.robots[rid]
-            rects[rid].set_xy((x - xL/2, y - yL/2))
+            xL, yL = env.robots[rid].xL, env.robots[rid].yL
+            rects[rid].set_xy((x - xL / 2, y - yL / 2))
             # locs[rid].set_data([x], [y])
             circles[rid].set_center((x, y))
         # for rid, path in agent_paths.items():
@@ -186,9 +206,14 @@ def plot_path(
 
     from tqdm.auto import tqdm
     import numpy as np
+
     # Create animation
     ani = animation.FuncAnimation(
-        fig, update_plot, frames=tqdm(np.arange(numframes), initial=1), interval=frame_delay, blit=True
+        fig,
+        update_plot,
+        frames=tqdm(np.arange(numframes), initial=1),
+        interval=frame_delay,
+        blit=True,
     )
     return ani
 
@@ -197,28 +222,25 @@ def readEnv(mapfile: str) -> Env:
     """
     <minx maxx>
     <miny maxy>
-    <numBots>
-    <botXL botYL> x numBots
     <numObs>
     <xleft yleft xL yL> x numObs
     """
 
     with open(mapfile, "r") as f:
-        minx, maxx = map(float, f.readline().split())
-        miny, maxy = map(float, f.readline().split())
+        minx, maxx, miny, maxy = map(float, f.readline().split())
+        numObs = int(f.readline())
+        obsts = []
+        for _ in range(numObs):
+            line = f.readline().strip()
+            x, y, xL, yL = map(float, line.split())
+            obsts.append(((x, y), (x, y + yL), (x + xL, y + yL), (x + xL, y)))
 
         numBots = int(f.readline().strip())
         bots = {}
         for i in range(numBots):
-            xL, yL = map(float, f.readline().split())
-            bots[i] = (xL, yL)
-
-        numObs = int(f.readline())
-        obsts = []
-        for _ in range(numObs):
-            x, y, xL, yL = map(float, f.readline().split())
-            obsts.append(((x, y), (x, y+yL), (x+xL, y+yL), (x+xL, y)))
-
+            name = f.readline().strip()
+            xL, yL, sx, sy, gx, gy = map(float, f.readline().split())
+            bots[i] = Agent(name, xL, yL, sx, sy, gx, gy)
 
         env = Env(minx, maxx, miny, maxy, 10, obsts, bots)
         return env
@@ -233,37 +255,38 @@ def readPath(pathfile: str, prefix: str = "Robot") -> dict[int, list[Vert]]:
             if len(line) == 0:
                 continue
             if line.startswith(prefix):
-                _, srid = line.split(' ')
+                _, srid = line.split(" ")
                 rid = int(srid)
                 paths[rid] = []
                 continue
-            vars = list(map(float, line.split(' ')))
+            vars = list(map(float, line.split(" ")))
             x, y = vars[:2]
             paths[rid].append((x, y))
     return paths
 
 
-def draw_sol(envfile: str, pathfile: str, interval: float=10, numframes: int=-1):
+def draw_sol(envfile: str, pathfile: str, interval: float = 10, numframes: int = -1):
     env = readEnv(envfile)
     paths = readPath(pathfile)
     maxSteps = max([len(path) for path in paths.values()])
     stepSize = 0.1
-    T = [i*stepSize for i in range(maxSteps)]
+    T = [i * stepSize for i in range(maxSteps)]
     for rid in paths:
         while len(paths[rid]) < len(T):
-            paths[rid].append(paths[rid][-1]) 
-    
+            paths[rid].append(paths[rid][-1])
+
     if numframes == -1:
         numframes = len(T)
     ani = plot_path(paths, env, T, interval, numframes=numframes)
     return ani
 
+
 if __name__ == "__main__":
-    envfile = "./n4-10x10-rect2-env.txt"
+    envfile = "./n4-10x10-rect2.scen"
     resfile = "./K-CBS-n4-10x10-rect2-plan.txt"
-    print ("Generating animation ...")
+    print("Generating animation ...")
     ani = draw_sol(envfile, resfile)
-    print ("Done, showing aniamtion ...")
+    print("Done, showing aniamtion ...")
     plt.show()
-    print ("Saving to file 'ani.mp4' ...")
+    print("Saving to file 'ani.mp4' ...")
     ani.save("ani.mp4")

@@ -53,15 +53,18 @@ void myDemoPropagateFunction(const ob::State *start, const oc::Control *control,
   result->as<ob::SE2StateSpace::StateType>()->setYaw(ctrl[1]);
 }
 
-void plan(const std::string &plannerName, const std::string &caseName,
-          const vmap &starts, const vmap &goals, oset &obsts, const Env &env) {
+void plan(const std::string &plannerName, const std::string &caseName, const Scen& scen) {
 
   // construct all of the robots
   std::unordered_map<std::string, Robot *> robot_map;
-  for (auto itr = starts.begin(); itr != starts.end(); itr++) {
-    Robot *robot = new RectangularRobot(itr->first, env.xL, env.yL);
-    robot_map[itr->first] = robot;
+  for (auto bot: scen.bots) {
+    Robot *robot = new RectangularRobot(bot.name, bot.xL, bot.yL);
+    robot_map[bot.name] = robot;
   }
+  vmap starts = scen.starts();
+  vmap goals = scen.goals();
+  oset obsts = scen.obsts();
+  const Env& env = scen.env;
 
   // construct an instance of multi-robot space information
   auto ma_si(std::make_shared<omrc::SpaceInformation>());
@@ -169,61 +172,33 @@ void plan(const std::string &plannerName, const std::string &caseName,
   }
 }
 
-void saveEnvFile(const std::string &caseName, int nBots, const Env &env,
-                 const std::vector<Obs> &obsts) {
-  /*
-      <minx maxx>
-      <miny maxy>
-      <numBots>
-      <botXL botYL> x numBots
-      <numObs>
-      <xleft yleft xL yL> x numObs
-   *
-   */
-  using namespace std;
-  ofstream out(caseName + "-env.txt");
-  out << env.minx << " " << env.maxx << endl;
-  out << env.miny << " " << env.maxy << endl;
-  out << nBots << endl;
-  for (int i = 0; i < nBots; i++) {
-    out << env.xL << " " << env.yL << endl;
-  }
-  out << obsts.size() << endl;
-  for (auto obs : obsts) {
-    obs.print(out);
-  }
-}
-
 void run() {
-  std::vector<Obs> rects = {// {0.5 + 5, 1.8 + 5, 9.0 + 5, 1.0 + 5},
-                            // {4.0 + 5, 5.0 + 5, 2.0 + 5, 2.0 + 5}
-                            {0.5, 1.8, 9.0, 1.0},
-                            {4.0, 5.0, 2.0, 2.0}};
-  oset obsts;
-  for (const auto &r : rects) {
-    obsts.insert(new RectangularObstacle(r.xleft, r.yleft, r.xL, r.yL));
-  }
-  // new RectangularObstacle(0.5, 1.8, 9.0, 1.0),
-  // new RectangularObstacle(4.0, 5.0, 2.0, 2.0),
-  const vmap starts{
-      {"Robot 1", {1.0, 0.5}},
-      {"Robot 2", {1.0, 3.5}},
-      {"Robot 3", {9.0, 0.5}},
-      {"Robot 4", {9.0, 3.5}},
+  // std::vector<Obs> rects = {// {0.5 + 5, 1.8 + 5, 9.0 + 5, 1.0 + 5},
+  //                           // {4.0 + 5, 5.0 + 5, 2.0 + 5, 2.0 + 5}
+  //                           {0.5, 1.8, 9.0, 1.0},
+  //                           {4.0, 5.0, 2.0, 2.0}};
+  // const vmap starts{
+  //     {"Robot 1", {1.0, 0.5}},
+  //     {"Robot 2", {1.0, 3.5}},
+  //     {"Robot 3", {9.0, 0.5}},
+  //     {"Robot 4", {9.0, 3.5}},
+  //
+  // };
+  // const vmap goals{
+  //     {"Robot 1", {9.0, 0.5}},
+  //     {"Robot 2", {9.0, 9.0}},
+  //     {"Robot 3", {1.0, 0.5}},
+  //     {"Robot 4", {1.0, 9.0}},
+  // };
+  // Env env{-5, 10, -5, 10, rects};
+  Scen scen;
+  scen.read("n4-10x10-rect2.scen");
+  // scen.init(starts, goals, 1, 1, env);
 
-  };
-  const vmap goals{
-      {"Robot 1", {9.0, 0.5}},
-      {"Robot 2", {9.0, 9.0}},
-      {"Robot 3", {1.0, 0.5}},
-      {"Robot 4", {1.0, 9.0}},
-  };
-  Env env{-5, 10, -5, 10, 1, 1};
-
-  saveEnvFile("n4-10x10-rect2", starts.size(), env, rects);
+  // scen.save("n4-10x10-rect2.scen");
 
   // plan("PP", "n4-10x10-rect2", starts, goals, obsts, env);
-  plan("K-CBS", "n4-10x10-rect2", starts, goals, obsts, env);
+  plan("K-CBS", "n4-10x10-rect2", scen);
 }
 
 int main() {

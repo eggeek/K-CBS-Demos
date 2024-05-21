@@ -34,3 +34,4 @@
 .cache/*
 bin/*
 build/*
+.launch.json
