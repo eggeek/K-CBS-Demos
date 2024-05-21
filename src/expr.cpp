@@ -53,7 +53,7 @@ void myDemoPropagateFunction(const ob::State *start, const oc::Control *control,
   result->as<ob::SE2StateSpace::StateType>()->setYaw(ctrl[1]);
 }
 
-void plan(const std::string &plannerName, const std::string &caseName, const Scen& scen) {
+void plan(const std::string &plannerName, const std::string &resfile, const Scen& scen) {
 
   // construct all of the robots
   std::unordered_map<std::string, Robot *> robot_map;
@@ -104,7 +104,7 @@ void plan(const std::string &plannerName, const std::string &caseName, const Sce
     //     odeSolver, &SecondOrderCarODEPostIntegration));
 
     // set the propagation step size
-    si->setPropagationStepSize(0.1);
+    si->setPropagationStepSize(0.5);
 
     // set this to remove the warning
     si->setMinMaxControlDuration(1, 10);
@@ -167,41 +167,26 @@ void plan(const std::string &plannerName, const std::string &caseName, const Sce
   if (solved) {
     printf("Found Solution in %0.2f seconds!\n", duration_s);
     omrb::PlanPtr solution = ma_pdef->getSolutionPlan();
-    std::ofstream myFile(plannerName + "-" + caseName + "-plan.txt");
+    std::ofstream myFile(resfile);
     solution->as<omrc::PlanControl>()->printAsMatrix(myFile, "Robot");
+    std::cout << "Length:" << solution->length() << std::endl;
   }
 }
 
-void run() {
-  // std::vector<Obs> rects = {// {0.5 + 5, 1.8 + 5, 9.0 + 5, 1.0 + 5},
-  //                           // {4.0 + 5, 5.0 + 5, 2.0 + 5, 2.0 + 5}
-  //                           {0.5, 1.8, 9.0, 1.0},
-  //                           {4.0, 5.0, 2.0, 2.0}};
-  // const vmap starts{
-  //     {"Robot 1", {1.0, 0.5}},
-  //     {"Robot 2", {1.0, 3.5}},
-  //     {"Robot 3", {9.0, 0.5}},
-  //     {"Robot 4", {9.0, 3.5}},
-  //
-  // };
-  // const vmap goals{
-  //     {"Robot 1", {9.0, 0.5}},
-  //     {"Robot 2", {9.0, 9.0}},
-  //     {"Robot 3", {1.0, 0.5}},
-  //     {"Robot 4", {1.0, 9.0}},
-  // };
-  // Env env{-5, 10, -5, 10, rects};
+void run(std::string scenfile, std::string resfile) {
   Scen scen;
-  scen.read("n4-10x10-rect2.scen");
-  // scen.init(starts, goals, 1, 1, env);
-
-  // scen.save("n4-10x10-rect2.scen");
-
-  // plan("PP", "n4-10x10-rect2", starts, goals, obsts, env);
-  plan("K-CBS", "n4-10x10-rect2", scen);
+  scen.read(scenfile);
+  plan("K-CBS", resfile, scen);
 }
 
-int main() {
-  run();
+int main(int argc, char** argv) {
+  // ./bin/expr <scenfile> <resfile>
+  if (argc < 3) {
+    std::cout << "Run cmd like this: ./expr <scenfile> <resfile>" << std::endl;
+    return 0;
+  }
+  std::string scenfile = std::string(argv[1]);
+  std::string resfile = std::string(argv[2]);
+  run(scenfile, resfile);
   return 0;
 }

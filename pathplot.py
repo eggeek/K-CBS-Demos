@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle, Circle
@@ -36,6 +37,24 @@ class Agent:
         self.gx = gx
         self.gy = gy
 
+
+def RectObstInflation(obs: Poly, minx: float, maxx: float, miny: float, maxy: float, xL: float, yL: float) -> Poly:
+    # convert obstacle in workspace to
+    # obstacles regaion for the centroid of agent, considering size
+    assert len(obs) == 4  # only support rectangle now
+    minx = min([v[0] for v in obs]) - xL / 2
+    maxx = max([v[0] for v in obs]) + xL / 2
+    miny = min([v[1] for v in obs]) - yL / 2
+    maxy = max([v[1] for v in obs]) + yL / 2
+    minx = max(minx, minx)
+    maxx = min(maxx, maxx)
+    miny = max(miny, miny)
+    maxy = min(maxy, maxy)
+
+    res = [(minx, miny), (minx, maxy), (maxx, maxy), (maxx, miny)]
+    return res
+
+
 class Env:
     def __init__(
         self,
@@ -43,7 +62,6 @@ class Env:
         maxx: float = 0,
         miny: float = 0,
         maxy: float = 0,
-        maxt: float = 0,
         obsts: list[Poly] | None = None,
         robots: dict[int, Agent] | None = None,
     ):
@@ -51,7 +69,6 @@ class Env:
         self.maxx: float = maxx
         self.miny: float = miny
         self.maxy: float = maxy
-        self.maxt: float = maxt
 
         if obsts is None:
             obsts = []
@@ -76,7 +93,25 @@ class Env:
 
     def set_obsts(self, obsts: list[Poly]):
         self.obsts = obsts
-        # self.inflated_obsts = [ObstacleInflation(obs, self) for obs in obsts]
+
+    def __str__(self) -> str:
+        lines = []
+        lines.append(f"{self.minx} {self.maxx} {self.miny} {self.maxy}")
+        lines.append( f"{len(self.obsts)}")
+        for i in range(len(self.obsts)):
+            obs = self.obsts[i]
+            minx = min([x for x, _ in obs])
+            maxx = max([x for x, _ in obs])
+            miny = min([y for _, y in obs])
+            maxy = max([y for _, y in obs])
+            xL, yL = maxx - minx, maxy - miny
+            lines.append(f"{minx} {miny} {xL} {yL}")
+        lines.append(f"{len(self.robots)}")
+        for b in self.robots.values():
+            name, xL, yL, sx, sy, gx, gy = b.name, b.xL, b.yL, b.sx, b.sy, b.gx, b.gy
+            lines.append(f"{name}")
+            lines.append(f"{xL} {yL} {sx} {sy} {gx} {gy}")
+        return '\n'.join(lines)
 
 
 def _draw_static_obstacles2D(ax, obsts: list[Poly], alpha=0.2):
@@ -242,7 +277,7 @@ def readEnv(mapfile: str) -> Env:
             xL, yL, sx, sy, gx, gy = map(float, f.readline().split())
             bots[i] = Agent(name, xL, yL, sx, sy, gx, gy)
 
-        env = Env(minx, maxx, miny, maxy, 10, obsts, bots)
+        env = Env(minx, maxx, miny, maxy, obsts, bots)
         return env
 
 
@@ -265,7 +300,7 @@ def readPath(pathfile: str, prefix: str = "Robot") -> dict[int, list[Vert]]:
     return paths
 
 
-def draw_sol(envfile: str, pathfile: str, interval: float = 10, numframes: int = -1):
+def draw_sol(envfile: str, pathfile: str, interval: float = 20, numframes: int = -1):
     env = readEnv(envfile)
     paths = readPath(pathfile)
     maxSteps = max([len(path) for path in paths.values()])
@@ -282,11 +317,13 @@ def draw_sol(envfile: str, pathfile: str, interval: float = 10, numframes: int =
 
 
 if __name__ == "__main__":
-    envfile = "./n4-10x10-rect2.scen"
-    resfile = "./K-CBS-n4-10x10-rect2-plan.txt"
+    # envfile = "./n4-10x10-rect2.scen"
+    # resfile = "./K-CBS-n4-10x10-rect2-plan.txt"
+    envfile = "./tmp.scen"
+    resfile = "./kcbs.plan"
     print("Generating animation ...")
     ani = draw_sol(envfile, resfile)
     print("Done, showing aniamtion ...")
     plt.show()
-    print("Saving to file 'ani.mp4' ...")
-    ani.save("ani.mp4")
+    # print("Saving to file 'ani.mp4' ...")
+    # ani.save("ani.mp4")
