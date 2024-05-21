@@ -62,6 +62,7 @@ class Env:
         maxx: float = 0,
         miny: float = 0,
         maxy: float = 0,
+        maxv: float = 1,
         obsts: list[Poly] | None = None,
         robots: dict[int, Agent] | None = None,
     ):
@@ -69,6 +70,7 @@ class Env:
         self.maxx: float = maxx
         self.miny: float = miny
         self.maxy: float = maxy
+        self.maxv: float = maxv
 
         if obsts is None:
             obsts = []
@@ -97,6 +99,7 @@ class Env:
     def __str__(self) -> str:
         lines = []
         lines.append(f"{self.minx} {self.maxx} {self.miny} {self.maxy}")
+        lines.append(f"{self.maxv}")
         lines.append( f"{len(self.obsts)}")
         for i in range(len(self.obsts)):
             obs = self.obsts[i]
@@ -257,12 +260,14 @@ def readEnv(mapfile: str) -> Env:
     """
     <minx maxx>
     <miny maxy>
+    <maxv>
     <numObs>
     <xleft yleft xL yL> x numObs
     """
 
     with open(mapfile, "r") as f:
         minx, maxx, miny, maxy = map(float, f.readline().split())
+        maxv = float(f.readline().strip())
         numObs = int(f.readline())
         obsts = []
         for _ in range(numObs):
@@ -277,7 +282,7 @@ def readEnv(mapfile: str) -> Env:
             xL, yL, sx, sy, gx, gy = map(float, f.readline().split())
             bots[i] = Agent(name, xL, yL, sx, sy, gx, gy)
 
-        env = Env(minx, maxx, miny, maxy, obsts, bots)
+        env = Env(minx, maxx, miny, maxy, maxv, obsts, bots)
         return env
 
 

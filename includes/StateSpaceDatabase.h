@@ -62,7 +62,7 @@ inline ob::StateSpacePtr createBounded2ndOrderCarStateSpace(const unsigned int x
     return space;
 }
 
-inline ob::StateSpacePtr createFirstOrderStateSpace(int minx, int maxx, int miny, int maxy)
+inline ob::StateSpacePtr createFirstOrderStateSpace(double minx, double maxx, double miny, double maxy, double maxv)
 {
     ob::StateSpacePtr space = std::make_shared<ob::CompoundStateSpace>();
     space->as<ob::CompoundStateSpace>()->addSubspace(ob::StateSpacePtr(new ob::RealVectorStateSpace(4)), 1.0);
@@ -75,8 +75,8 @@ inline ob::StateSpacePtr createFirstOrderStateSpace(int minx, int maxx, int miny
     bounds.setHigh(0, maxx);
     bounds.setLow(1, miny);
     bounds.setHigh(1, maxy);
-    bounds.setLow(2, -1);
-    bounds.setHigh(2, 1);
+    bounds.setLow(2, -maxv);
+    bounds.setHigh(2, maxv);
     bounds.setLow(3, -M_PI);
     bounds.setHigh(3, M_PI);
     space->as<ob::CompoundStateSpace>()->as<ob::RealVectorStateSpace>(0)->setBounds(bounds);

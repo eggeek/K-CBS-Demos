@@ -55,8 +55,8 @@ def runall(dirname: str):
             if not os.path.exists(resfile):
                 continue
             print ("Generating animation ...")
-            ani = draw_sol(scenfile, resfile, interval = 20)
-            anifile = os.path.join(dirname, scen, "kcbs.mp4")
+            ani = draw_sol(scenfile, resfile)
+            anifile = os.path.join(dirname, scen, "kcbs.gif")
             ani.save(anifile)
             print ("Done.")
 

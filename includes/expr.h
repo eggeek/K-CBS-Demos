@@ -40,11 +40,11 @@ struct Agent {
 
 struct Env {
   // workspace
-  double minx = 0, maxx = 0, miny = 0, maxy = 0;
+  double minx = 0, maxx = 0, miny = 0, maxy = 0, maxv = 1;
   std::vector<Obs> obsts;
 
   void read(std::istream &in) {
-    in >> minx >> maxx >> miny >> maxy;
+    in >> minx >> maxx >> miny >> maxy >> maxv;
     int num;
     in >> num;
     obsts.resize(num);
@@ -53,7 +53,7 @@ struct Env {
     }
   }
   void print(std::ostream &out) {
-    out << minx << " " << maxx << " " << miny << " " << maxy << std::endl;
+    out << minx << " " << maxx << " " << miny << " " << maxy << " " << maxv << std::endl;
     out << obsts.size() << std::endl;
     for (auto ob : obsts)
       ob.print(out);

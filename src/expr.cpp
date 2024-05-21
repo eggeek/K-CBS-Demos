@@ -74,14 +74,14 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
   for (auto itr = starts.begin(); itr != starts.end(); itr++) {
     // construct the state space we are planning in
     // auto space = createBounded2ndOrderCarStateSpace(env.maxx, env.maxy);
-    auto space = createFirstOrderStateSpace(env.minx, env.maxx, env.miny, env.maxy);
+    auto space = createFirstOrderStateSpace(env.minx, env.maxx, env.miny, env.maxy, env.maxv);
 
     // name the state space parameter
     space->setName(itr->first);
 
     // create a control space
     // auto cspace = createUniform2DRealVectorControlSpace(space);
-    auto cspace = createFirstOrderControlSpace(space);
+    auto cspace = createFirstOrderControlSpace(space, env.maxv);
 
     // construct an instance of  space information from this control space
     auto si(std::make_shared<oc::SpaceInformation>(space, cspace));
