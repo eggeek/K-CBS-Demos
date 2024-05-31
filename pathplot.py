@@ -30,7 +30,7 @@ class Agent:
         self, n: str, xl: float, yl: float, sx: float, sy: float, gx: float, gy: float
     ):
         self.name = n
-        self.xL = xl 
+        self.xL = xl
         self.yL = yl
         self.sx = sx
         self.sy = sy
@@ -38,7 +38,9 @@ class Agent:
         self.gy = gy
 
 
-def RectObstInflation(obs: Poly, minx: float, maxx: float, miny: float, maxy: float, xL: float, yL: float) -> Poly:
+def RectObstInflation(
+    obs: Poly, minx: float, maxx: float, miny: float, maxy: float, xL: float, yL: float
+) -> Poly:
     # convert obstacle in workspace to
     # obstacles regaion for the centroid of agent, considering size
     assert len(obs) == 4  # only support rectangle now
@@ -100,7 +102,7 @@ class Env:
         lines = []
         lines.append(f"{self.minx} {self.maxx} {self.miny} {self.maxy}")
         lines.append(f"{self.maxv}")
-        lines.append( f"{len(self.obsts)}")
+        lines.append(f"{len(self.obsts)}")
         for i in range(len(self.obsts)):
             obs = self.obsts[i]
             minx = min([x for x, _ in obs])
@@ -114,7 +116,7 @@ class Env:
             name, xL, yL, sx, sy, gx, gy = b.name, b.xL, b.yL, b.sx, b.sy, b.gx, b.gy
             lines.append(f"{name}")
             lines.append(f"{xL} {yL} {sx} {sy} {gx} {gy}")
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
 
 def _draw_static_obstacles2D(ax, obsts: list[Poly], alpha=0.2):
@@ -305,9 +307,23 @@ def readPath(pathfile: str, prefix: str = "Robot") -> dict[int, list[Vert]]:
     return paths
 
 
+def readJsonPath(jsonfile: str) -> dict[int, list[Vert]]:
+    import json
+
+    dat = json.load(open(jsonfile, "r"))
+    dim = 2
+    if isinstance(list(dat['paths'].values())[0][0][0], list):
+        dim = 3
+    paths = {
+        int(rid): path if dim == 2 else path[0] 
+        for rid, path in dat["paths"].items()
+    }
+    return paths
+
+
 def draw_sol(envfile: str, pathfile: str, interval: float = 20, numframes: int = -1):
     env = readEnv(envfile)
-    paths = readPath(pathfile)
+    paths = readJsonPath(pathfile) if pathfile.endswith(".json") else readPath(pathfile)
     maxSteps = max([len(path) for path in paths.values()])
     stepSize = 0.1
     T = [i * stepSize for i in range(maxSteps)]
