@@ -20,7 +20,11 @@ include_directories(
 # file(GLOB DEMO_SOURCES RELATIVE ${CMAKE_SOURCE_DIR}/src/ src/*.cpp )
 set(DEMO_SOURCES 
   expr.cpp
-  simple_expr.cpp
+  # simple_expr.cpp
+)
+
+set(ALL_SOURCES 
+  ./includes/customizedKCBS.cpp
 )
 
 
@@ -31,7 +35,7 @@ cmake_print_variables(CMAKE_SOURCE_DIR)
 foreach( demoFile ${DEMO_SOURCES} )
     string( REPLACE ".cpp" "" demoName ${demoFile} )
     cmake_print_variables(demoName)
-    add_executable( ${demoName} src/${demoFile} )
+    add_executable( ${demoName} src/${demoFile} ${ALL_SOURCES})
     # Make sure YourLib is linked to each app
     target_link_libraries( ${demoName} ${OMPL_LIBRARIES} )
 endforeach( demoFile ${DEMO_SOURCES} )

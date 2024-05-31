@@ -6,11 +6,11 @@
 #include "SimpleStateValidityChecker.h"
 #include "StatePropagatorDatabase.h"
 #include "StateSpaceDatabase.h"
+#include "customizedKCBS.h"
 
 #include <map>
 #include <math.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
-#include <ompl/multirobot/control/planners/kcbs/KCBS.h>
 #include <ompl/multirobot/control/planners/pp/PP.h>
 
 namespace omrb = ompl::multirobot::base;
@@ -148,9 +148,9 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
     auto merger = std::make_shared<myDemoSystemMerger>(ma_si, ma_pdef);
     ma_si->setSystemMerger(merger);
     // plan using Kinodynamic Conflict Based Search
-    planner = std::make_shared<omrc::KCBS>(ma_si);
-    planner->as<omrc::KCBS>()->setLowLevelSolveTime(5.);
-    planner->as<omrc::KCBS>()->setMergeBound(1000);
+    planner = std::make_shared<omrc::CustomizedKCBS>(ma_si);
+    planner->as<omrc::CustomizedKCBS>()->setLowLevelSolveTime(5.);
+    planner->as<omrc::CustomizedKCBS>()->setMergeBound(1000);
   } else {
     // plan using Prioritized Planner
     planner = std::make_shared<omrc::PP>(ma_si);
