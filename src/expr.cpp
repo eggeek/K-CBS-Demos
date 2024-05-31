@@ -57,8 +57,10 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
 
   // construct all of the robots
   std::unordered_map<std::string, Robot *> robot_map;
+  double size = 0;
   for (auto bot: scen.bots) {
     Robot *robot = new RectangularRobot(bot.name, bot.xL, bot.yL);
+    size = fmax(size, fmax(bot.xL, bot.yL));
     robot_map[bot.name] = robot;
   }
   vmap starts = scen.starts();
@@ -74,7 +76,7 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
   for (auto itr = starts.begin(); itr != starts.end(); itr++) {
     // construct the state space we are planning in
     // auto space = createBounded2ndOrderCarStateSpace(env.maxx, env.maxy);
-    auto space = createFirstOrderStateSpace(env.minx, env.maxx, env.miny, env.maxy, env.maxv);
+    auto space = createFirstOrderStateSpace(env.minx, env.maxx, env.miny, env.maxy, env.maxv, size);
 
     // name the state space parameter
     space->setName(itr->first);
@@ -104,7 +106,7 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
     //     odeSolver, &SecondOrderCarODEPostIntegration));
 
     // set the propagation step size
-    si->setPropagationStepSize(0.5);
+    si->setPropagationStepSize(0.1);
 
     // set this to remove the warning
     si->setMinMaxControlDuration(1, 10);
