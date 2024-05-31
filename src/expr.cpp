@@ -12,11 +12,14 @@
 #include <math.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
 #include <ompl/multirobot/control/planners/pp/PP.h>
+#include <ompl/util/Console.h>
+#include <string>
 
 namespace omrb = ompl::multirobot::base;
 namespace omrc = ompl::multirobot::control;
 namespace ob = ompl::base;
 namespace oc = ompl::control;
+namespace msg = ompl::msg;
 
 class myDemoSystemMerger : public omrc::SystemMerger {
 public:
@@ -53,7 +56,7 @@ void myDemoPropagateFunction(const ob::State *start, const oc::Control *control,
   result->as<ob::SE2StateSpace::StateType>()->setYaw(ctrl[1]);
 }
 
-void plan(const std::string &plannerName, const std::string &resfile, const Scen& scen) {
+void plan(const std::string &plannerName, const std::string &resfile, const Scen& scen, double timelimit) {
 
   // construct all of the robots
   std::unordered_map<std::string, Robot *> robot_map;
@@ -160,7 +163,7 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
       ma_pdef); // be sure to set the problem definition
 
   auto start = std::chrono::high_resolution_clock::now();
-  bool solved = planner->as<omrb::Planner>()->solve(300.0);
+  bool solved = planner->as<omrb::Planner>()->solve(timelimit);
   auto end = std::chrono::high_resolution_clock::now();
   auto duration_ms =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -175,10 +178,11 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
   }
 }
 
-void run(std::string scenfile, std::string resfile) {
+void run(std::string scenfile, std::string resfile, double timelimit) {
   Scen scen;
   scen.read(scenfile);
-  plan("K-CBS", resfile, scen);
+  msg::setLogLevel(msg::LOG_WARN);
+  plan("K-CBS", resfile, scen, timelimit);
 }
 
 int main(int argc, char** argv) {
@@ -189,6 +193,10 @@ int main(int argc, char** argv) {
   }
   std::string scenfile = std::string(argv[1]);
   std::string resfile = std::string(argv[2]);
-  run(scenfile, resfile);
+  double timelimit = 300;
+  if (argc >= 4) {
+    timelimit = std::stof(argv[3]);
+  }
+  run(scenfile, resfile, timelimit);
   return 0;
 }

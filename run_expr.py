@@ -7,6 +7,7 @@ from math import sqrt
 from pathplot import readPath
 
 OK: int = 0
+TLM: float = 300.0 
 
 
 def genResJson(resfile: str, runtime: float) -> dict:
@@ -29,11 +30,11 @@ def genResJson(resfile: str, runtime: float) -> dict:
     return res
 
 
-def run(scenfile: str):
+def run(scenfile: str, timelimit: float):
     dirname = os.path.dirname(scenfile)
     resfile = os.path.join(dirname, "kcbs.plan")
     tstart = time.perf_counter()
-    code = os.system(f"./bin/expr {scenfile} {resfile}")
+    code = os.system(f"./bin/expr {scenfile} {resfile} {timelimit}")
     tend = time.perf_counter()
     runtime = tend - tstart
     if code == OK and os.path.exists(resfile):
@@ -48,7 +49,7 @@ def runall(dirname: str):
         scenfile = os.path.join(dirname, scen, "data.scen")
         if os.path.exists(scenfile):
             print (f"Running scen {scenfile}", file=sys.stderr)
-            run(scenfile)
+            run(scenfile, TLM)
 
             resfile = os.path.join(dirname, scen, "kcbs.plan")
             if not os.path.exists(resfile):
@@ -67,4 +68,4 @@ if __name__ == "__main__":
     if sys.argv[1] == "all":
         runall("./cbs-scen")
     else:
-        run(sys.argv[1])
+        run(sys.argv[1], TLM)
