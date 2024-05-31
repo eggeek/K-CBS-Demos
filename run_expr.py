@@ -39,26 +39,27 @@ def run(scenfile: str):
     if code == OK and os.path.exists(resfile):
         resDict = genResJson(resfile, runtime)
         resJsonPath = os.path.join(dirname, "kcbs.json")
-        print (f"Saving result to {resJsonPath}")
+        print (f"Saving result to {resJsonPath}", file=sys.stderr)
         json.dump(resDict, open(resJsonPath, "w"), indent=2)
 
 
 def runall(dirname: str):
-    from pathplot import draw_sol
     for scen in os.listdir(dirname):
         scenfile = os.path.join(dirname, scen, "data.scen")
         if os.path.exists(scenfile):
-            print (f"Running scen {scenfile}")
+            print (f"Running scen {scenfile}", file=sys.stderr)
             run(scenfile)
 
             resfile = os.path.join(dirname, scen, "kcbs.plan")
             if not os.path.exists(resfile):
+                print (f"No solution: {scenfile}", file=sys.stderr)
                 continue
-            print ("Generating animation ...")
-            ani = draw_sol(scenfile, resfile)
-            anifile = os.path.join(dirname, scen, "kcbs.gif")
-            ani.save(anifile)
-            print ("Done.")
+            # from pathplot import draw_sol
+            # print ("Generating animation ...")
+            # ani = draw_sol(scenfile, resfile, 20, 500)
+            # anifile = os.path.join(dirname, scen, "kcbs.gif")
+            # ani.save(anifile)
+            # print ("Done.")
 
 
 
