@@ -154,6 +154,7 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
     planner = std::make_shared<omrc::CustomizedKCBS>(ma_si);
     planner->as<omrc::CustomizedKCBS>()->setLowLevelSolveTime(5.);
     planner->as<omrc::CustomizedKCBS>()->setMergeBound(1000);
+    planner->as<omrc::CustomizedKCBS>()->setSolfile(resfile);
   } else {
     // plan using Prioritized Planner
     planner = std::make_shared<omrc::PP>(ma_si);

@@ -35,9 +35,10 @@
 /* Author: Justin Kottinger */
 
 #include "customizedKCBS.h"
-#include "ompl/base/StateSpace.h"
 #include "ompl/util/Console.h"
 #include <thread>
+
+namespace omrc = ompl::multirobot::control;
 
 ompl::multirobot::control::CustomizedKCBS::CustomizedKCBS(
     const ompl::multirobot::control::SpaceInformationPtr &si)
@@ -310,7 +311,7 @@ void ompl::multirobot::control::CustomizedKCBS::attemptReplan(
     node->setConflicts(confs);
     node->setCost(nodeCost(node));
     // node->setCost(evaluateCost(confs)); // cost metric is undefined for this
-                                        // portion bc there are no conflicts
+    // portion bc there are no conflicts
   } else {
     numApproxSolutions_ += 1;
     // save the planner prior to exit only if planner not already saved
@@ -402,7 +403,7 @@ void ompl::multirobot::control::CustomizedKCBS::parallelRootSolution(
 
 void ompl::multirobot::control::CustomizedKCBS::parallelNodeExpansion(
     NodePtr &solution, std::vector<unsigned int> &resevered,
-    std::pair<int, int> &merge_indices) {
+    std::pair<int, int> &merge_indices, std::mutex &lock) {
   // if (solution) // another thread beat this one to a solution
   //     return;
 
@@ -433,12 +434,20 @@ void ompl::multirobot::control::CustomizedKCBS::parallelNodeExpansion(
 
     // if no conflicts were found, return as solution
     if (confs.empty()) {
+      lock.lock();
       if (solution == nullptr || solution->getCost() > currentNode->getCost()) {
         solution = currentNode;
         auto tnow = std::chrono::steady_clock::now();
-        auto dur = std::chrono::duration<double>(tnow-tstart).count();
-        OMPL_WARN("Update solution to %.2f, took %.2f s", currentNode->getCost(), dur); 
+        auto dur = std::chrono::duration<double>(tnow - tstart).count();
+        OMPL_WARN("Update solution to %.2f, took %.2f s",
+                  currentNode->getCost(), dur);
+        OMPL_WARN("Save to file [%s].", this->solfile_.c_str());
+        std::ofstream resfile(this->solfile_);
+        solution->getPlan()->as<omrc::PlanControl>()->printAsMatrix(resfile,
+                                                                    "Robot");
+        resfile.close();
       }
+      lock.unlock();
       return;
     }
 
@@ -509,9 +518,9 @@ double ompl::multirobot::control::CustomizedKCBS::nodeCost(NodePtr n) {
   for (unsigned int r = 0; r != siC_->getIndividualCount(); r++) {
     // res += plan->getPath(r)->getStateCount();
     auto path = plan->getPath(r);
-    for (int i=0; i+1<path->getStateCount(); i++) {
+    for (int i = 0; i + 1 < path->getStateCount(); i++) {
       auto s0 = path->getState(i);
-      auto s1 = path->getState(i+1);
+      auto s1 = path->getState(i + 1);
       dist += siC_->getIndividual(r)->getStateSpace()->distance(s0, s1);
     }
   }
@@ -588,13 +597,13 @@ ompl::base::PlannerStatus ompl::multirobot::control::CustomizedKCBS::solve(
     root->setCost(
         // evaluateCost(confs) // cost for root node is technically undefined
         nodeCost(root) // cost for root node is technically undefined
-    ); 
+    );
     pushNode(root);
   }
 
   std::vector<unsigned int> resevered;
-
-  while (!ptc && !pq_.empty()) {
+  std::mutex lock;
+  while (!pq_.empty()) {
     // use multiple threads to expand multiple nodes at once
     const unsigned int numNodesInQueue = pq_.size();
     const unsigned int test = std::floor(numThreads_ / 2);
@@ -604,7 +613,7 @@ ompl::base::PlannerStatus ompl::multirobot::control::CustomizedKCBS::solve(
       threads.push_back(std::thread(
           &ompl::multirobot::control::CustomizedKCBS::parallelNodeExpansion,
           this, std::ref(solution), std::ref(resevered),
-          std::ref(merge_indices)));
+          std::ref(merge_indices), std::ref(lock)));
       std::this_thread::sleep_for(std::chrono::milliseconds(
           100)); // wait 0.1 seconds s.t. reserved is updated properly
     }
@@ -651,6 +660,8 @@ ompl::base::PlannerStatus ompl::multirobot::control::CustomizedKCBS::solve(
       }
       break;
     }
+    if (ptc)
+      break;
   }
   if (solution == nullptr) {
     OMPL_INFORM("%s: No solution found.", getName().c_str());

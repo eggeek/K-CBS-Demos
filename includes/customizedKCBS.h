@@ -50,6 +50,7 @@
 #include <random>
 #include <unordered_set>
 #include <utility>
+#include <thread>
 
 namespace ompl {
 namespace multirobot {
@@ -108,6 +109,10 @@ public:
 
   /** Set the low-level solve time. */
   void setLowLevelSolveTime(const double t) { llSolveTime_ = t; };
+
+  void setSolfile(const std::string file) {
+    solfile_ = file;
+  }
 
   /** Get the low-level solve time. */
   double getLowLevelSolveTime() const { return llSolveTime_; };
@@ -331,7 +336,8 @@ protected:
    * expand it */
   void parallelNodeExpansion(NodePtr &solution,
                              std::vector<unsigned int> &resevered,
-                             std::pair<int, int> &merge_indices);
+                             std::pair<int, int> &merge_indices,
+                             std::mutex& lock);
 
   /** \brief The main replanning function for the high-level constraint tree.
    * Updates data of node if replan was successful */
@@ -374,6 +380,8 @@ protected:
 
   /** \brief The computation time for the low-level solver. */
   double llSolveTime_;
+
+  std::string solfile_;
 
   /** \brief The bound for merging two individuals into one */
   unsigned int mergeBound_;
