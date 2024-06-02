@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 import json
-import time
 import sys
 from math import sqrt
 from pathplot import readPath
@@ -10,8 +9,23 @@ OK: int = 0
 TLM: float = 500.0
 
 
-def genResJson(resfile: str, runtime: float) -> dict:
+def readStatistic(resfile: str):
     res = {}
+    with open(resfile, 'r') as f:
+        lines = f.readlines()
+        for i, line in enumerate(lines):
+            if line.startswith('='):
+                k1, v1 = lines[i+1].split()
+                res[k1] = float(v1)
+
+                k2, v2 = lines[i+2].split()
+                res[k2] = float(v2)
+                break
+    return res
+
+
+def genResJson(resfile: str) -> dict:
+    res = readStatistic(resfile)
     paths = readPath(resfile)
     lb = 0
     ub = 0
@@ -25,7 +39,6 @@ def genResJson(resfile: str, runtime: float) -> dict:
         lb += sqrt((sx - gx) ** 2 + (sy - gy) ** 2)
     res["lb"] = lb
     res["ub"] = ub
-    res["runtime"] = runtime
     res["paths"] = paths
     return res
 
@@ -33,16 +46,11 @@ def genResJson(resfile: str, runtime: float) -> dict:
 def run(scenfile: str, timelimit: float):
     dirname = os.path.dirname(scenfile)
     resfile = os.path.join(dirname, "kcbs.plan")
-    runtime = timelimit
     resJsonPath = os.path.join(dirname, "kcbs.json")
 
-    tstart = time.perf_counter()
     os.system(f"./bin/expr {scenfile} {resfile} {timelimit}")
-    tend = time.perf_counter()
-    runtime = tend - tstart
-
     if os.path.exists(resfile):
-        resDict = genResJson(resfile, runtime)
+        resDict = genResJson(resfile)
         print(f"Saving result to {resJsonPath}")
         json.dump(resDict, open(resJsonPath, "w"), indent=2)
 
@@ -69,11 +77,12 @@ def runall(dirname: str):
     print ("To run: ", '\n'.join([f"  {i}: [{task}]" for i, task in enumerate(torun)]))
 
     for scenfile in torun:
+        resfile = os.path.join(os.path.dirname(scenfile), "kcbs.plan")
         print(f"Running scen {scenfile}")
         run(scenfile, TLM)
 
         if not os.path.exists(resfile):
-            print(f"No solution: {scenfile}")
+            print(f"No solution: {resfile} not exists")
             continue
 
 
