@@ -172,10 +172,10 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
 
   if (solved) {
     printf("Found Solution in %0.2f seconds!\n", duration_s);
-    omrb::PlanPtr solution = ma_pdef->getSolutionPlan();
-    std::ofstream myFile(resfile);
-    solution->as<omrc::PlanControl>()->printAsMatrix(myFile, "Robot");
-    std::cout << "Length:" << solution->length() << std::endl;
+    // omrb::PlanPtr solution = ma_pdef->getSolutionPlan();
+    // std::ofstream myFile(resfile);
+    // solution->as<omrc::PlanControl>()->printAsMatrix(myFile, "Robot");
+    // std::cout << "Length:" << solution->length() << std::endl;
   }
 }
 
