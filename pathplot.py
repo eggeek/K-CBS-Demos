@@ -296,6 +296,8 @@ def readPath(pathfile: str, prefix: str = "Robot") -> dict[int, list[Vert]]:
             line = line.strip()
             if len(line) == 0:
                 continue
+            if line.startswith("="):
+                break
             if line.startswith(prefix):
                 _, srid = line.split(" ")
                 rid = int(srid)
