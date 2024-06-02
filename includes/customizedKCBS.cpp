@@ -445,6 +445,9 @@ void ompl::multirobot::control::CustomizedKCBS::parallelNodeExpansion(
         std::ofstream resfile(this->solfile_);
         solution->getPlan()->as<omrc::PlanControl>()->printAsMatrix(resfile,
                                                                     "Robot");
+        resfile << "==============" << std::endl;
+        resfile << "runtime " << dur << std::endl;
+        resfile << "cost " << currentNode->getCost() << std::endl;
         resfile.close();
       }
       lock.unlock();
@@ -663,6 +666,19 @@ ompl::base::PlannerStatus ompl::multirobot::control::CustomizedKCBS::solve(
     if (ptc)
       break;
   }
+  // save solution to file before segment fault
+  if (solution != nullptr) {
+    std::ofstream resfile(this->solfile_);
+    solution->getPlan()->as<omrc::PlanControl>()->printAsMatrix(resfile,
+                                                                "Robot");
+    auto tnow = std::chrono::steady_clock::now();
+    auto dur = std::chrono::duration<double>(tnow - tstart).count();
+    resfile << "==============" << std::endl;
+    resfile << "runtime " << dur << std::endl;
+    resfile << "cost " << solution->getCost() << std::endl;
+    resfile.close();
+  }
+
   if (solution == nullptr) {
     OMPL_INFORM("%s: No solution found.", getName().c_str());
     return {solved, false};
