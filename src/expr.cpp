@@ -4,6 +4,7 @@
 #include "PlannerAllocatorDatabase.h"
 #include "Robot.h"
 #include "SimpleStateValidityChecker.h"
+#include "SystemMergerDatabase.h"
 #include "StatePropagatorDatabase.h"
 #include "StateSpaceDatabase.h"
 #include "customizedKCBS.h"
@@ -109,7 +110,7 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
     //     odeSolver, &SecondOrderCarODEPostIntegration));
 
     // set the propagation step size
-    si->setPropagationStepSize(0.1);
+    si->setPropagationStepSize(0.2);
 
     // set this to remove the warning
     si->setMinMaxControlDuration(1, 10);
@@ -146,9 +147,9 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
   omrb::PlannerPtr planner = nullptr;
   if (plannerName == "K-CBS") {
     // set the system merger
-    // auto merger = std::make_shared<homogeneous2ndOrderCarSystemMerger>(
-    //     ma_si, ma_pdef, robot_map, obsts, 10, starts, goals);
-    auto merger = std::make_shared<myDemoSystemMerger>(ma_si, ma_pdef);
+    auto merger = std::make_shared<homogeneous2ndOrderCarSystemMerger>(
+        ma_si, ma_pdef, robot_map, obsts, 10, starts, goals);
+    // auto merger = std::make_shared<myDemoSystemMerger>(ma_si, ma_pdef);
     ma_si->setSystemMerger(merger);
     // plan using Kinodynamic Conflict Based Search
     planner = std::make_shared<omrc::CustomizedKCBS>(ma_si);
