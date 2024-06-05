@@ -215,11 +215,11 @@ void ompl::multirobot::control::CustomizedKCBS::updateConflictCounter(
 std::pair<int, int> ompl::multirobot::control::CustomizedKCBS::mergeNeeded() {
   // iterate through all of the possible merge pairs and check if any pairs have
   // too many conflicts. If so, return the pair. Otherwise, return (-1, -1)
-  for (auto itr = conflictCounter_.begin(); itr != conflictCounter_.end();
-       itr++) {
-    if (itr->second > mergeBound_)
-      return itr->first;
-  }
+  // for (auto itr = conflictCounter_.begin(); itr != conflictCounter_.end();
+  //      itr++) {
+  //   if (itr->second > mergeBound_)
+  //     return itr->first;
+  // }
   return std::make_pair(-1, -1);
 }
 
@@ -309,8 +309,8 @@ void ompl::multirobot::control::CustomizedKCBS::attemptReplan(
     node->setPlan(new_plan);
     std::vector<Conflict> confs = findConflicts(node->getPlan());
     node->setConflicts(confs);
-    node->setCost(nodeCost(node));
-    // node->setCost(evaluateCost(confs)); // cost metric is undefined for this
+    // node->setCost(nodeCost(node));
+    node->setCost(evaluateCost(confs)); // cost metric is undefined for this
     // portion bc there are no conflicts
   } else {
     numApproxSolutions_ += 1;
@@ -435,19 +435,19 @@ void ompl::multirobot::control::CustomizedKCBS::parallelNodeExpansion(
     // if no conflicts were found, return as solution
     if (confs.empty()) {
       lock.lock();
-      if (solution == nullptr || solution->getCost() > currentNode->getCost()) {
+      if (solution == nullptr || nodeCost(solution) > nodeCost(currentNode)) {
         solution = currentNode;
         auto tnow = std::chrono::steady_clock::now();
         auto dur = std::chrono::duration<double>(tnow - tstart).count();
         OMPL_WARN("Update solution to %.2f, took %.2f s",
-                  currentNode->getCost(), dur);
+                  nodeCost(currentNode), dur);
         OMPL_WARN("Save to file [%s].", this->solfile_.c_str());
         std::ofstream resfile(this->solfile_);
         solution->getPlan()->as<omrc::PlanControl>()->printAsMatrix(resfile,
                                                                     "Robot");
         resfile << "==============" << std::endl;
         resfile << "runtime " << dur << std::endl;
-        resfile << "cost " << currentNode->getCost() << std::endl;
+        resfile << "cost " << nodeCost(currentNode) << std::endl;
         resfile.close();
       }
       lock.unlock();
@@ -598,8 +598,8 @@ ompl::base::PlannerStatus ompl::multirobot::control::CustomizedKCBS::solve(
     // for debugging
     root->setConflicts(confs);
     root->setCost(
-        // evaluateCost(confs) // cost for root node is technically undefined
-        nodeCost(root) // cost for root node is technically undefined
+        evaluateCost(confs) // cost for root node is technically undefined
+        // nodeCost(root) // cost for root node is technically undefined
     );
     pushNode(root);
   }
@@ -675,7 +675,7 @@ ompl::base::PlannerStatus ompl::multirobot::control::CustomizedKCBS::solve(
     auto dur = std::chrono::duration<double>(tnow - tstart).count();
     resfile << "==============" << std::endl;
     resfile << "runtime " << dur << std::endl;
-    resfile << "cost " << solution->getCost() << std::endl;
+    resfile << "cost " << nodeCost(solution) << std::endl;
     resfile.close();
   }
 
