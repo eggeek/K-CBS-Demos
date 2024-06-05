@@ -8,12 +8,18 @@ def run(scendir: str, fname: str):
     if not os.path.exists(resfile):
         print (f"File [{resfile}] not exists, skip ...")
         return
+    # else:
+    print (f"Generate gif for [{resfile}]")
+    #     return
     dirname = os.path.dirname(resfile)
     envfile = os.path.join(dirname, "data.scen")
-    ani = pp.draw_sol(envfile, resfile, 20, 500)
-    print (f"Generating animation for [{scendir}] ...")
-    anifile = os.path.join(dirname, "kcbs.gif")
+    anifile = os.path.join(dirname, fname.removesuffix(".json") +".gif")
 
+    exists = os.path.exists(anifile)
+    if exists or len(pp.readJsonPath(resfile)) == 0:
+        return
+    ani = pp.draw_sol(envfile, resfile, 20, 500)
+    print (f"Generating animation for [{resfile}] ...")
     print (f"Saving to [{anifile}] ...")
     ani.save(anifile)
     pp.plt.close()
@@ -21,7 +27,7 @@ def run(scendir: str, fname: str):
 
 def runall(dirname: str):
     for scen in os.listdir(dirname):
-        # run(os.path.join(dirname, scen), "kcbs.json")
+        run(os.path.join(dirname, scen), "kcbs.json")
         run(os.path.join(dirname, scen), "micp-UB.json")
 
 
