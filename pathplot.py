@@ -313,6 +313,8 @@ def readJsonPath(jsonfile: str) -> dict[int, list[Vert]]:
     import json
 
     dat = json.load(open(jsonfile, "r"))
+    if len(dat.get('paths', {})) == 0:
+        return {}
     dim = 2
     if isinstance(list(dat['paths'].values())[0][0][0], list):
         dim = 3
