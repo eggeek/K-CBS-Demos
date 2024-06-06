@@ -66,7 +66,7 @@ def run(scenfile: str, timelimit: float):
 def runall(dirname: str):
     torun = []
     for scen in os.listdir(dirname):
-        scenfile = os.path.join(dirname, scen, "data.json")
+        scenfile = os.path.join(dirname, scen, "data.scen")
         if not os.path.exists(scenfile):
             print (f"Missing scen file [{scenfile}], skip")
         resfile = os.path.join(dirname, scen, "kcbs.plan")
