@@ -8,6 +8,8 @@ import matplotlib.colors as mcolors
 
 from typing import TypeAlias
 
+from matplotlib.text import Annotation
+
 CellPath: TypeAlias = tuple[list[tuple[int, int]], list[float]]
 CIDPath: TypeAlias = tuple[list[int], list[float]]
 
@@ -164,14 +166,14 @@ def _draw_path(ax: Axes, path: list[Vert], ts: TimeSteps, is_2d=False, **kws):
     _draw_point(ax, path[-1], ts[-1], is_2d, alpha=1, marker="+", ms=10, color=color)
 
 
-def plot_path(
+def _plot_path_static(
     agent_paths: dict[int, list[Vert]],
     env: Env,
     T: TimeSteps,
-    frame_delay: float,
-    numframes: int = 50,
+    rects: dict[int, Rectangle],
+    circles: dict[int, Circle],
     figsize=(15, 15),
-):
+) -> tuple[Figure, Axes]:
     subp = plt.subplots(figsize=figsize)
     fig: Figure = subp[0]
     ax: Axes = subp[1]
@@ -179,27 +181,11 @@ def plot_path(
     ax.set_ylim(env.ybound())
     fig.tight_layout()
 
-    tmax = max(T)
-    dt = tmax / numframes
-
     _draw_static_obstacles2D(ax, env.obsts, alpha=0.8)
 
     # colors except gray
     clst = list(mcolors.TABLEAU_COLORS.keys())
     colors = {rid: clst[rid % len(clst)] for rid in agent_paths.keys()}
-    labels = {}
-    header = ax.annotate(
-        "Time: 0\nStep: 0",
-        xy=(env.maxx * 0.9, env.maxy * 0.9),
-        xytext=(env.maxx * 0.9, env.maxy * 0.9),
-    )
-    for rid, path in agent_paths.items():
-        x, y = path[0]
-        labels[rid] = ax.annotate(
-            f"{rid}", xy=(x, y), fontsize=10, ha="center", va="center", weight="bold"
-        )
-    rects: dict[int, Rectangle] = {}
-    circles: dict[int, Circle] = {}
 
     for rid in agent_paths.keys():
         color = colors[rid]
@@ -211,7 +197,37 @@ def plot_path(
         circles[rid] = Circle(v, radius=(xL + yL) / 20, alpha=0.7, color=color)
         ax.add_patch(rects[rid])
         ax.add_patch(circles[rid])
-        _draw_path(ax, agent_paths[rid], T, alpha=0.1, is_2d=True, color=color)
+        _draw_path(ax, agent_paths[rid], T, alpha=0.3, is_2d=True, color=color)
+    return fig, ax
+
+
+def plot_path(
+    agent_paths: dict[int, list[Vert]],
+    env: Env,
+    T: TimeSteps,
+    frame_delay: float,
+    numframes: int = 50,
+    figsize=(15, 15),
+):
+    rects: dict[int, Rectangle] = {}
+    circles: dict[int, Circle] = {}
+    fig, ax = _plot_path_static(agent_paths, env, T, rects, circles, figsize)
+
+    tmax = max(T)
+    dt = tmax / numframes
+
+    # colors except gray
+    labels = {}
+    header = ax.annotate(
+        "Time: 0\nStep: 0",
+        xy=(env.maxx * 0.9, env.maxy * 0.9),
+        xytext=(env.maxx * 0.9, env.maxy * 0.9),
+    )
+    for rid, path in agent_paths.items():
+        x, y = path[0]
+        labels[rid] = ax.annotate(
+            f"{rid}", xy=(x, y), fontsize=10, ha="center", va="center", weight="bold"
+        )
 
     from bisect import bisect_right
 
@@ -313,16 +329,28 @@ def readJsonPath(jsonfile: str) -> dict[int, list[Vert]]:
     import json
 
     dat = json.load(open(jsonfile, "r"))
-    if len(dat.get('paths', {})) == 0:
+    if len(dat.get("paths", {})) == 0:
         return {}
     dim = 2
-    if isinstance(list(dat['paths'].values())[0][0][0], list):
+    if isinstance(list(dat["paths"].values())[0][0][0], list):
         dim = 3
     paths = {
-        int(rid): path if dim == 2 else path[0] 
-        for rid, path in dat["paths"].items()
+        int(rid): path if dim == 2 else path[0] for rid, path in dat["paths"].items()
     }
     return paths
+
+
+def draw_sol_static(envfile: str, pathfile: str, figsize=(5, 5)):
+    env = readEnv(envfile)
+    paths = readJsonPath(pathfile) if pathfile.endswith(".json") else readPath(pathfile)
+    maxSteps = max([len(path) for path in paths.values()])
+    stepSize = 0.1
+    T = [i * stepSize for i in range(maxSteps)]
+    for rid in paths:
+        while len(paths[rid]) < len(T):
+            paths[rid].append(paths[rid][-1])
+    fig, ax = _plot_path_static(paths, env, T, {}, {}, figsize=figsize)
+    return fig, ax
 
 
 def draw_sol(envfile: str, pathfile: str, interval: float = 20, numframes: int = -1):
