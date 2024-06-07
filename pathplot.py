@@ -179,6 +179,8 @@ def _plot_path_static(
     ax: Axes = subp[1]
     ax.set_xlim(env.xbound())
     ax.set_ylim(env.ybound())
+    ax.set_xticks([])
+    ax.set_yticks([])
     fig.tight_layout()
 
     _draw_static_obstacles2D(ax, env.obsts, alpha=0.8)
