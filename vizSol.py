@@ -80,3 +80,4 @@ if __name__ == "__main__":
         runall("./cbs-scen", rtype)
     else:
         run(sys.argv[1], "kcbs.json", rtype)
+        run(sys.argv[1], "micp-UB.json", rtype)
