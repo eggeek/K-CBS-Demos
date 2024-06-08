@@ -54,7 +54,12 @@ def genResJson(scenJson: str, resfile: str) -> dict:
 def run(scenfile: str, timelimit: float):
     dirname = os.path.dirname(scenfile)
     resfile = os.path.join(dirname, "kcbs.plan")
+    logfile = os.path.join(dirname, "kcbs.log")
     resJsonPath = os.path.join(dirname, "kcbs.json")
+
+    if os.path.exists(logfile):
+        print(f"Clean existing logfile [{logfile}]")
+        os.remove(logfile)
 
     os.system(f"./bin/expr {scenfile} {resfile} {timelimit}")
     if os.path.exists(resfile):
