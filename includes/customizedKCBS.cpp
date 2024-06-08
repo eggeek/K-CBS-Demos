@@ -449,6 +449,12 @@ void ompl::multirobot::control::CustomizedKCBS::parallelNodeExpansion(
         resfile << "runtime " << dur << std::endl;
         resfile << "cost " << nodeCost(currentNode) << std::endl;
         resfile.close();
+
+        auto pos = solfile_.find("kcbs.plan");
+        std::string logfile = solfile_.substr(0, pos) + "kcbs.log";
+        OMPL_WARN("Log to file [%s].", logfile.c_str());
+        std::ofstream log(logfile, std::ios::app);
+        log << dur << "," << nodeCost(currentNode) << std::endl;
       }
       lock.unlock();
       return;
