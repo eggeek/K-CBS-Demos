@@ -3,15 +3,24 @@ project(K-CBS-Examples)
 
 set (CMAKE_CXX_STANDARD 17)
 
+if (APPLE)
+set(CMAKE_CXX_FLAGS "-I${CMAKE_SOURCE_DIR}/ompl/src -I${CMAKE_SOURCE_DIR}/ompl/build/src -I/opt/homebrew/include/eigen3 -I/opt/homebrew/include")
+else()
 set(CMAKE_CXX_FLAGS "-I${CMAKE_SOURCE_DIR}/ompl/src -I${CMAKE_SOURCE_DIR}/ompl/build/src -I/usr/include/eigen3")
+endif()
 set(DEV_CXX_FLAGS "-g -ggdb -O0 -fno-omit-frame-pointer")
 set(RELEASE_CXX_FLAGS "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${DEV_CXX_FLAGS}")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/../bin)
-set(OMPL_LIBRARIES "${CMAKE_SOURCE_DIR}/ompl/build/lib/libompl.so")
+
+if (APPLE)
+	set(OMPL_LIBRARIES "${CMAKE_SOURCE_DIR}/ompl/build/lib/libompl.1.6.0.dylib")
+else()
+	set(OMPL_LIBRARIES "${CMAKE_SOURCE_DIR}/ompl/build/lib/libompl.so")
+endif()
 
 
-find_package(ompl REQUIRED) # make sure this is the ompl with the K-CBS implementation
+# find_package(ompl REQUIRED) # make sure this is the ompl with the K-CBS implementation
 
 include_directories(
     includes

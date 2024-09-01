@@ -36,3 +36,4 @@ bin/*
 build/*
 .launch.json
 cbs-scen/*
+__pycache__/*
