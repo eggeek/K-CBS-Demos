@@ -7,6 +7,7 @@ from math import sqrt
 from pathplot import readPath
 
 OK: int = 0
+STEPSIZE: float = 0.2
 TLM: float = 500.0
 
 
@@ -51,7 +52,7 @@ def genResJson(scenJson: str, resfile: str, sid: int) -> dict:
     return res
 
 
-def run(scenfile: str, timelimit: float):
+def run(scenfile: str, timelimit: float, stepsize: float):
     dirname = os.path.dirname(scenfile)
     sid = int(os.path.basename(scenfile).split('-')[0])
     resfile = os.path.join(dirname, f"{sid}-kcbs.plan")
@@ -62,8 +63,9 @@ def run(scenfile: str, timelimit: float):
         print(f"Clean existing logfile [{logfile}]")
         os.remove(logfile)
 
-    print (f"run [./bin/expr {scenfile} {resfile} {timelimit}]")
-    os.system(f"./bin/expr {scenfile} {resfile} {timelimit}")
+    cmd = f"./bin/expr {scenfile} {resfile} {timelimit} {stepsize}"
+    print (f"run [{cmd}]")
+    os.system(cmd)
     if os.path.exists(resfile):
         resDict = genResJson(os.path.join(dirname, "data.json"), resfile, sid)
         print(f"Saving result to {resJsonPath}")
@@ -99,7 +101,7 @@ def runall(dirname: str):
         ith = int(os.path.basename(scenfile).split('-')[0])
         resfile = os.path.join(os.path.dirname(scenfile), f"{ith}-kcbs.plan")
         print(f"Running scen {scenfile}")
-        run(scenfile, TLM)
+        run(scenfile, TLM, STEPSIZE)
 
         if not os.path.exists(resfile):
             print(f"No solution: {resfile} not exists")
@@ -155,4 +157,4 @@ if __name__ == "__main__":
     elif sys.argv[1] == "gen":
         genall("./mapf-scen")
     else:
-        run(sys.argv[1], TLM)
+        run(sys.argv[1], TLM, STEPSIZE)

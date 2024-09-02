@@ -57,7 +57,7 @@ void myDemoPropagateFunction(const ob::State *start, const oc::Control *control,
   result->as<ob::SE2StateSpace::StateType>()->setYaw(ctrl[1]);
 }
 
-void plan(const std::string &plannerName, const std::string &resfile, const Scen& scen, double timelimit) {
+void plan(const std::string &plannerName, const std::string &resfile, const Scen& scen, double timelimit, double stepsize) {
 
   // construct all of the robots
   std::unordered_map<std::string, Robot *> robot_map;
@@ -110,7 +110,7 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
     //     odeSolver, &SecondOrderCarODEPostIntegration));
 
     // set the propagation step size
-    si->setPropagationStepSize(0.2);
+    si->setPropagationStepSize(stepsize);
 
     // set this to remove the warning
     si->setMinMaxControlDuration(1, 10);
@@ -180,11 +180,11 @@ void plan(const std::string &plannerName, const std::string &resfile, const Scen
   }
 }
 
-void run(std::string scenfile, std::string resfile, double timelimit) {
+void run(std::string scenfile, std::string resfile, double timelimit, double stepsize) {
   Scen scen;
   scen.read(scenfile);
   msg::setLogLevel(msg::LOG_WARN);
-  plan("K-CBS", resfile, scen, timelimit);
+  plan("K-CBS", resfile, scen, timelimit, stepsize);
 }
 
 int main(int argc, char** argv) {
@@ -195,10 +195,13 @@ int main(int argc, char** argv) {
   }
   std::string scenfile = std::string(argv[1]);
   std::string resfile = std::string(argv[2]);
-  double timelimit = 300;
+  double timelimit = 300, stepsize=0.2;
   if (argc >= 4) {
     timelimit = std::stof(argv[3]);
   }
-  run(scenfile, resfile, timelimit);
+	if (argc >= 5) {
+		stepsize = std::stof(argv[4]);
+	}
+  run(scenfile, resfile, timelimit, stepsize);
   return 0;
 }
