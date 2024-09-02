@@ -7,7 +7,7 @@ from math import sqrt
 from pathplot import readPath
 
 OK: int = 0
-TLM: float = 5.0
+TLM: float = 500.0
 
 
 def readStatistic(resfile: str):
