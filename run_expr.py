@@ -7,7 +7,7 @@ from math import sqrt
 from pathplot import readPath
 
 OK: int = 0
-TLM: float = 500.0
+TLM: float = 5.0
 
 
 def readStatistic(resfile: str):
@@ -25,11 +25,11 @@ def readStatistic(resfile: str):
     return res
 
 
-def genResJson(scenJson: str, resfile: str) -> dict:
+def genResJson(scenJson: str, resfile: str, sid: int) -> dict:
     print ("scen:", scenJson)
     res = readStatistic(resfile)
 
-    scens = json.load(open(scenJson, 'r'))['scens'][0]
+    scens = json.load(open(scenJson, 'r'))['scens'][sid]
     lb = 0
     for i in range(len(scens['s_x'])):
         sx, sy = scens['s_x'][i], scens['s_y'][i]
@@ -51,8 +51,9 @@ def genResJson(scenJson: str, resfile: str) -> dict:
     return res
 
 
-def run(scenfile: str, sid: int, timelimit: float):
+def run(scenfile: str, timelimit: float):
     dirname = os.path.dirname(scenfile)
+    sid = int(os.path.basename(scenfile).split('-')[0])
     resfile = os.path.join(dirname, f"{sid}-kcbs.plan")
     logfile = os.path.join(dirname, f"{sid}-kcbs.log")
     resJsonPath = os.path.join(dirname, f"{sid}-kcbs.json")
@@ -64,7 +65,7 @@ def run(scenfile: str, sid: int, timelimit: float):
     print (f"run [./bin/expr {scenfile} {resfile} {timelimit}]")
     os.system(f"./bin/expr {scenfile} {resfile} {timelimit}")
     if os.path.exists(resfile):
-        resDict = genResJson(scenfile.removesuffix(".scen")+".json", resfile)
+        resDict = genResJson(os.path.join(dirname, "data.json"), resfile, sid)
         print(f"Saving result to {resJsonPath}")
         json.dump(resDict, open(resJsonPath, "w"), indent=2)
 
@@ -95,10 +96,10 @@ def runall(dirname: str):
     print ("To run:\n", '\n'.join([f"  {i}: [{task}]" for i, task in enumerate(torun)]))
 
     for scenfile in torun:
-        ith = int(scenfile.split('-')[0])
+        ith = int(os.path.basename(scenfile).split('-')[0])
         resfile = os.path.join(os.path.dirname(scenfile), f"{ith}-kcbs.plan")
         print(f"Running scen {scenfile}")
-        run(scenfile, ith, TLM)
+        run(scenfile, TLM)
 
         if not os.path.exists(resfile):
             print(f"No solution: {resfile} not exists")
@@ -130,7 +131,7 @@ def genall(dirname: str):
         scenfile = os.path.join(dirname, scen, "data.json")
         resfile = os.path.join(dirname, scen, f"{i}-kcbs.plan")
         jsonfile = os.path.join(dirname, scen, f"{i}-kcbs.json")
-        resDict = genResJson(scenfile, resfile)
+        resDict = genResJson(scenfile, resfile, i)
         json.dump(resDict, open(jsonfile, 'w'), indent=2)
 
     print ("No sol:\n", '\n'.join([f"{i}-{scen}" for scen, i in no_sol]))
@@ -154,4 +155,4 @@ if __name__ == "__main__":
     elif sys.argv[1] == "gen":
         genall("./mapf-scen")
     else:
-        run(sys.argv[1], int(sys.argv[2]), TLM)
+        run(sys.argv[1], TLM)
