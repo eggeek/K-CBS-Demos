@@ -5,9 +5,11 @@
 3. Follow the instruction in `K-CBS-Demos/ompl/Readme.md` to compile `ompl`;
 4. Back to the top layer and run `make fast` to compile `K-CBS-Demos`;
 5. Run experiments
- - `./bin/expr`: original experiment script
- - `./bin/simple_expr`: simplified experiment script that ignores feasibility checking in transition
-6. Plot result: `python pathplot.py`
+ - Create soft links for generated scenarios:
+     - `ln -s <large-mapf-scen> large-mapf-scen`
+     - `ln -s <special-mapf-scen> special-mapf-scen`
+ - `./json2scen.py`: generate `.scen` file based `.json`
+ - `./run_expr.py`: run all scenarios in `large-mapf-scen` and `special-mapf-scen`
 
 - Turn on/off high order dynamics:
 

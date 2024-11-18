@@ -153,8 +153,10 @@ def genall(dirname: str):
 
 if __name__ == "__main__":
     if sys.argv[1] == "all":
-        runall("./mapf-scen")
+        runall("./special-mapf-scen")
+        runall("./large-mapf-scen")
     elif sys.argv[1] == "gen":
-        genall("./mapf-scen")
+        genall("./special-mapf-scen")
+        genall("./large-mapf-scen")
     else:
         run(sys.argv[1], TLM, STEPSIZE)

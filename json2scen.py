@@ -54,6 +54,7 @@ if __name__ == "__main__":
     ./json2scen data.json > file.scen
     """
     if argv[1] == "all":
-        runall("./mapf-scen")
+        runall("./large-map-scen")
+        runall("./special-map-scen")
     else:
         run(argv[1])
