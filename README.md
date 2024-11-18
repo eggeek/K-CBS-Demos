@@ -1,6 +1,6 @@
 # K-CBS-Demos
 
-1. `git clone --recurcive git@github.com:eggeek/K-CBS-Demos.git`;
+1. `git clone --recursive git@github.com:eggeek/K-CBS-Demos.git`;
 2. `cd K-CBS-Demos/ompl`;
 3. Follow the instruction in `K-CBS-Demos/ompl/Readme.md` to compile `ompl`;
 4. Back to the top layer and run `make fast` to compile `K-CBS-Demos`;
