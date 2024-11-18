@@ -10,6 +10,7 @@
      - `ln -s <special-mapf-scen> special-mapf-scen`
  - `./json2scen.py`: generate `.scen` file based `.json`
  - `./run_expr.py`: run all scenarios in `large-mapf-scen` and `special-mapf-scen`
+6. Visualize result: `./pathplot.py <scenfile> <resfile>`
 
 - Turn on/off high order dynamics:
 

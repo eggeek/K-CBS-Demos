@@ -82,6 +82,7 @@ def runall(dirname: str):
             scenfile = os.path.join(dirname, scen, f"{i}-data.scen")
             if not os.path.exists(scenfile):
                 print (f"Missing scen file [{scenfile}], skip")
+                continue
             resfile = os.path.join(dirname, scen, f"{i}-kcbs.plan")
             resJsonPath = os.path.join(dirname, scen, f"{i}-kcbs.json")
             print(f"Processing scen {scenfile}")

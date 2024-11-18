@@ -372,13 +372,17 @@ def draw_sol(envfile: str, pathfile: str, interval: float = 20, numframes: int =
 
 
 if __name__ == "__main__":
+    """
+    ./pathplot.py ./large-mapf-scen/n4-10x10-rnd/0-data.scen ./large-mapf-scen/n4-10x10-rnd/0-kcbs.json
+    """
+    import sys
     # envfile = "./n4-10x10-rect2.scen"
     # resfile = "./K-CBS-n4-10x10-rect2-plan.txt"
-    envfile = "./tmp.scen"
-    resfile = "./kcbs.plan"
+    envfile = sys.argv[1]
+    resfile = sys.argv[2]
     print("Generating animation ...")
     ani = draw_sol(envfile, resfile)
     print("Done, showing aniamtion ...")
     plt.show()
-    # print("Saving to file 'ani.mp4' ...")
-    # ani.save("ani.mp4")
+    print("Saving to file 'ani.mp4' ...")
+    ani.save("ani.mp4")
