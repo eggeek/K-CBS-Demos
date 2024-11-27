@@ -141,8 +141,8 @@ def genall(dirname: str):
     for scen, i in no_sol:
         envfile = os.path.join(dirname, scen, "data.json")
         jsonfile = os.path.join(dirname, scen, f"{i}-kcbs.json")
-        scens = json.load(open(envfile, 'r'))['scens']
-        nagent = len(scens[0]['s_x'])
+        scens = json.load(open(envfile, 'r'))['scens'][0]
+        nagent = len(scens['s_x'])
         lb = 0
         for j in range(nagent):
             sx, sy = scens["s_x"][j], scens['s_y'][j]
